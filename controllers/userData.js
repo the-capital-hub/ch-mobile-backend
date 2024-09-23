@@ -602,35 +602,35 @@ export const registerUserController = async (req, res, next) => {
         }
       );
       //  console.log("update")
-      const emailMessage = `
-        A new user has requested for an account:
+      // const emailMessage = `
+      //   A new user has requested for an account:
         
-        Investor Details:
-        User ID: ${newUser._id}
-        Name: ${newUser.firstName} ${newUser.lastName}
-        Email: ${newUser.email}
-        Mobile: ${phoneNumber}
-        Company Name: ${newInvestor.companyName}
-        Industry: ${newInvestor.industry}
-        Portfolio: ${newInvestor.portfolio}
-      `;
-      const subject = "New Account Request";
-      const adminMail = "investments.capitalhub@gmail.com";
-      //"learn.capitalhub@gmail.com";
-      const response = await sendMail(
-        newUser.firstName,
-        adminMail,
-        newUser.email,
-        subject,
-        emailMessage
-      );
-      if (response.status === 200) {
+      //   Investor Details:
+      //   User ID: ${newUser._id}
+      //   Name: ${newUser.firstName} ${newUser.lastName}
+      //   Email: ${newUser.email}
+      //   Mobile: ${phoneNumber}
+      //   Company Name: ${newInvestor.companyName}
+      //   Industry: ${newInvestor.industry}
+      //   Portfolio: ${newInvestor.portfolio}
+      // `;
+      // const subject = "New Account Request";
+      // const adminMail = "investments.capitalhub@gmail.com";
+      // //"learn.capitalhub@gmail.com";
+      // const response = await sendMail(
+      //   newUser.firstName,
+      //   adminMail,
+      //   newUser.email,
+      //   subject,
+      //   emailMessage
+      // );
+      // if (response.status === 200) {
         return res
           .status(200)
-          .json({ message: "Investor Added", data: newUser });
-      } else {
-        return res.status(500).json({ message: "Error while sending mail" });
-      }
+          .json({status:true, message: "Investor Added", data: newUser });
+      // } else {
+      //   return res.status(500).json({ message: "Error while sending mail" });
+      // }
       //return res.status(201).json({ message: "User added successfully" });
     } else {
       let existingCompany = await StartUpModel.findOne({
@@ -679,12 +679,13 @@ export const registerUserController = async (req, res, next) => {
         .status(201)
         .json({ status: true, message: "User added successfully", data: newUser, token });
     }
-  } catch ({ message }) {
+  } catch (error) {
     res.status(409).json({
       success: false,
       status:false,
       operational: true,
-      message,
+      error:error,
+      data:{}
     });
   }
 };
