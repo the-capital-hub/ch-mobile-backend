@@ -682,7 +682,7 @@ export const registerUserController = async (req, res, next) => {
   } catch ({ message }) {
     res.status(409).json({
       success: false,
-      status:true,
+      status:false,
       operational: true,
       message,
     });
