@@ -392,11 +392,12 @@ export const sendOTP = async (req, res) => {
       }
     );
     return res.status(200).send({
-      orderId: response.data.orderId,
+      status:true,
+      data: {orderId: response.data.orderId},
       message: "OTP Send successfully",
     });
   } catch (err) {
-    return res.status(500).json({ error: "Failed to fetch data" });
+    return res.status(500).json({status:false, error: "Failed to fetch data", data:{}});
   }
 };
 export const verifyOtp = async (req, res) => {
@@ -717,11 +718,11 @@ export const loginUserController = async (req, res, next) => {
     return res
       .cookie("token", token)
       .status(200)
-      .json({ message: "Login successful", user, token });
+      .json({status:true, message: "Login successful", data: {user, token} });
   } catch (error) {
     return res
       .status(401)
-      .json({ operational: true, success: false, message: error.message });
+      .json({ operational: true, status: false, message: error.message, data:{} });
   }
 };
 
