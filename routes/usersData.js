@@ -35,6 +35,7 @@ import {
   getUserByIdBodyController,
   getUsersByUserNameController,
   unblockUserController,
+  resendOtp
 } from "../controllers/userData.js";
 
 import { authenticateToken } from "../middlewares/authenticateToken.js";
@@ -60,6 +61,7 @@ router.post("/linkdin_login",handelLinkedin);
 router.post("/getLinkedInProfile",getLinkedInProfile)
 router.post("/createUser", registerUserController);
 router.post("/send_otp",sendOTP);
+router.post("/resend_otp", resendOtp)
 router.post("/verify_otp", verifyOtp)
 router.get("/getUserById/:id", getUserByIdController);
 

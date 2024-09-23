@@ -38,6 +38,7 @@ import xlsx from "xlsx";
 import axios from "axios";
 import { InvestorModel } from "../models/Investor.js";
 
+
 export const createUser = async (req, res) => {
   try {
     const file = req.file;
@@ -400,6 +401,31 @@ export const sendOTP = async (req, res) => {
     return res.status(500).json({status:false, error: "Failed to fetch data", data:{}});
   }
 };
+export const resendOtp = async(req,res)=>{
+  try {
+    const response = await axios.post(
+      "https://auth.otpless.app/auth/otp/v1/resend",
+      {
+        orderId: req.body.orderId,
+      },
+      {
+        headers: {
+          clientId: process.env.CLIENT_ID,
+          clientSecret: process.env.CLIENT_SECRET,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.status(200).send({
+      status:true,
+      data: {orderId: response.data.orderId},
+      message: "OTP Re-sent successfully",
+    });
+  } catch (err) {
+    return res.status(500).json({status:false, error: err, data:{}});
+  }
+};
+
 export const verifyOtp = async (req, res) => {
   try {
     const response = await axios.post(
@@ -417,18 +443,34 @@ export const verifyOtp = async (req, res) => {
         },
       }
     );
-    if (response.data.isOTPVerified) {
+
+const phoneNumber = req.body.phoneNumber
+
+
+   if (response.data.isOTPVerified) {
+  const user = await UserModel.findOne({ phoneNumber: `+${phoneNumber}` });
+
+    const token = jwt.sign(
+      { userId: user._id, phoneNumber: user.phoneNumber },
+      secretKey
+    );
+
       return res.status(200).send({
-        isOTPVerified: response.data.isOTPVerified,
+        status:true,
+        data:{
+        user:user,
+        token:token
+      },
         message: "OTP verified",
       });
-    }
+ }
     return res.status(200).send({
+      status:false,
       data: response.data,
-      message: response.data.reason,
+      message: "Otp not verified",
     });
   } catch (err) {
-    return res.status(500).json({ error: "Failed to fetch data" });
+    return res.status(500).json({ status: false, error: err, data:{} });
   }
 };
 
@@ -635,11 +677,12 @@ export const registerUserController = async (req, res, next) => {
       );
       return res
         .status(201)
-        .json({ message: "User added successfully", data: newUser, token });
+        .json({ status: true, message: "User added successfully", data: newUser, token });
     }
   } catch ({ message }) {
     res.status(409).json({
       success: false,
+      status:true,
       operational: true,
       message,
     });
