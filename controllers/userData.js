@@ -182,13 +182,13 @@ export const getUsersByUserNameController = async (req, res) => {
     const getUser = await getUserByUserName(username);
 
     if (getUser.status === 404) {
-      return res.status(404).send({ message: "User not found" });
+      return res.status(404).send({status: false, message: "User not found", data:{} });
     }
 
-    return res.status(200).send(getUser.message);
+    return res.status(200).send({status: true,message: getUser.message, data:{}});
   } catch (error) {
     console.error("Error in getUsersByUserNameController:", error);
-    return res.status(500).send({ message: "Internal server error" });
+    return res.status(500).send({ status: false, message: error, data:{} });
   }
 };
 
@@ -792,8 +792,10 @@ export const updateUser = async (req, res) => {
       userId,
       newData,
     });
-    res.status(status).json({ message, data });
-  } catch (error) {}
+    res.status(status).json({status:true, message, data });
+  } catch (error) {
+    res.status(500).json({status:false, error, data:{} });
+  }
 };
 
 export const updateUserByIdController = async (req, res) => {
