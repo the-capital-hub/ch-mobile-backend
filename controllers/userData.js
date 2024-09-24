@@ -185,7 +185,7 @@ export const getUsersByUserNameController = async (req, res) => {
       return res.status(404).send({status: false, message: "User not found", data:{} });
     }
 
-    return res.status(200).send({status: true,message: getUser.message, data:{}});
+    return res.status(200).send({status: true,message: "User details fetched", data:getUser.message});
   } catch (error) {
     console.error("Error in getUsersByUserNameController:", error);
     return res.status(500).send({ status: false, message: error, data:{} });
