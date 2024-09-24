@@ -134,13 +134,16 @@ export const updateUserData = async ({ userId, newData }) => {
 
 
     if (newData?.profilePicture) {
-      const profilePicture = base64ToBuffer(newData.profilePicture);
-      const { secure_url } = await cloudinary.uploader.upload(profilePicture, {
-        folder: `${process.env.CLOUDIANRY_FOLDER}/startUps/logos`,
+      const profilePictureBuffer = base64ToBuffer(newData.profilePicture);
+      const profilePictureBase64 = `data:image/webp;base64,${profilePictureBuffer.toString('base64')}`;
+      
+      const { secure_url } = await cloudinary.uploader.upload(profilePictureBase64, {
+        folder: `${process.env.CLOUDINARY_FOLDER}/startUps/logos`,
         format: "webp",
         unique_filename: true,
       });
-      profilePicture = secure_url;
+
+      newData.profilePicture = secure_url; 
     }
     const data = await UserModel.findByIdAndUpdate(
       userId,
