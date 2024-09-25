@@ -144,7 +144,7 @@ export const commentOnPostController = async (req, res) => {
     const { postId } = req.params;
     const { userId, text } = req.body;
     const response = await commentOnPost(postId, userId, text);
-    return res.send({status: true, response});
+    return res.send({status: true, ...response});
   } catch (error) {
     console.error(error);
     return res.status(500).send({
@@ -364,7 +364,7 @@ export const deleteCommentController = async (req, res) => {
     const { postId, commentId } = req.params;
     const userId = req.userId;
     const result = await deleteComment(postId, commentId, userId);
-    return res.json({status: true, result});
+    return res.json({status: true, ...result});
   } catch (error) {
     console.error(error);
     return res.status(500).json({
