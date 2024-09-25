@@ -440,7 +440,6 @@ export const commentOnPost = async (postId, userId, text) => {
     const post = await PostModel.findById(postId);
     if (!post) {
       return {
-        status: 404,
         message: "Post not found",
       };
     }
@@ -453,14 +452,12 @@ export const commentOnPost = async (postId, userId, text) => {
     const type = "postCommented";
     await addNotification(post.user, userId, type, postId);
     return {
-      status: 200,
       message: "Comment added successfully",
       data: post,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
       message: "An error occurred while adding the comment.",
     };
   }
@@ -963,7 +960,6 @@ export const deleteComment = async (postId, commentId, userId) => {
 
     if (!post) {
       return {
-        status: 404,
         message: "Post not found.",
       };
     }
@@ -976,20 +972,17 @@ export const deleteComment = async (postId, commentId, userId) => {
     );
     if (commentIndex === -1) {
       return {
-        status: 404,
         message: "Comment not found.",
       };
     }
     post.comments.splice(commentIndex, 1);
     await post.save();
     return {
-      status: 200,
       message: "Comment deleted successfully.",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
       message: "An error occurred while deleting the comment.",
     };
   }

@@ -1,8 +1,6 @@
 import {
   allPostsData,
   createNewPost,
-  // getUserSavedPosts,
-  // savePostService,
   singlePostData,
   likeUnlikePost,
   commentOnPost,
@@ -30,17 +28,6 @@ import { UserModel } from "../models/User.js";
 
 export const update_all = async (req, res) => {
   try {
-    // const data1 = await UserModel.find();
-    // const updateProduct = async (item) => {
-    //   const recaning = (Number(item.actualPrice) / 100) * 30;
-    //   await productModel.findOneAndUpdate(
-    //     { _id: item._id },
-    //     { price: Number(item.actualPrice) - recaning }
-    //   );
-    // };
-    // data1.forEach((item) => {
-    //   updateProduct(item);
-    // });
     const data = await UserModel.updateMany(
       {},
       {
@@ -48,14 +35,6 @@ export const update_all = async (req, res) => {
       },
       { new: true }
     );
-
-    // const adminId = req.user.userId;
-    // const adminData = await userModel.findOne({ _id: adminId });
-    // if (!adminData) {
-    //   return res.status(400).send({ message: "You are not authorized" });
-    // }
-    // const productRequest = req.body;
-    // const productData = await productModel.create(productRequest);
     return res.status(201).send(data);
   } catch (err) {
     return res.status(500).send(err.message);
@@ -143,37 +122,6 @@ export const getSinglePost = async (req, res) => {
   }
 };
 
-// export const savePost = async (req, res) => {
-//   try {
-//     const response = await savePostService(req.userId, req.params.postId);
-//     res.send(response);
-//   } catch (error) {
-//     res.status(500).send(error);
-//   }
-// };
-
-// export const savePost = async (req, res) => {
-//   try {
-//     const response = await savePostService(
-//       req.userId,
-//       req.params.postId,
-//       req.body.collection
-//     );
-//     res.send(response);
-//   } catch (error) {
-//     res.status(500).send(error);
-//   }
-// };
-
-// export const getSavedPosts = async (req, res) => {
-//   try {
-//     const response = await getUserSavedPosts(req.userId);
-//     res.send(response);
-//   } catch (error) {
-//     res.status(500).send(error);
-//   }
-// };
-
 // like or unlike a post
 export const likeUnlikePostController = async (req, res) => {
   try {
@@ -196,11 +144,11 @@ export const commentOnPostController = async (req, res) => {
     const { postId } = req.params;
     const { userId, text } = req.body;
     const response = await commentOnPost(postId, userId, text);
-    return res.status(response.status).send(response);
+    return res.send({status: true, response});
   } catch (error) {
     console.error(error);
     return res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while adding the comment.",
     });
   }
@@ -416,11 +364,11 @@ export const deleteCommentController = async (req, res) => {
     const { postId, commentId } = req.params;
     const userId = req.userId;
     const result = await deleteComment(postId, commentId, userId);
-    return res.status(result.status).json(result);
+    return res.json({status: true, result});
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      status: 500,
+      status: false,
       message: "An error occurred while deleting the comment.",
     });
   }
