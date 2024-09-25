@@ -237,7 +237,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
           _id: comment._id,
           text: comment.text,
           user: `${comment.user.firstName} ${comment.user.lastName}`,
-          userDesignation: comment.user.designation,
+          userDesignation: comment.user.designation || "",
           userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
           userImage: comment.user.profilePicture,
           createdAt: timeAgo(comment.createdAt),
@@ -250,7 +250,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         userFirstName,
         userLastName,
         userImage,
-        userDesignation,
+        userDesignation: userDesignation || "",
         userCompany: startUp?.company || investor?.companyName || "",
         userIsSubscribed,
       };
