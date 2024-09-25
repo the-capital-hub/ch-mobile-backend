@@ -264,11 +264,11 @@ export const deletedPostController = async (req, res) => {
     const { postId } = req.params;
     const userId = req.userId;
     const result = await deletePost(postId, userId);
-    return res.status(result.status).json(result);
+    return res.json({status: true, ...result});
   } catch (error) {
     console.log(error);
     return res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while deleting posts.",
     });
   }
@@ -279,11 +279,11 @@ export const addToCompanyUpdateController = async (req,res)=>{
     const { postId } = req.params;
     const userId = req.userId;
     const result = await addToCompanyUpdate(postId, userId);
-    return res.status(result.status).json(result);
+    return res.json({status: true, ...result});
   } catch (error) {
     console.log(error);
     return res.status(500).send({
-      status: 500,
+      status:false,
       message: "An error occurred while adding post as featured.",
     });
   }
@@ -293,11 +293,11 @@ export const addToFeaturedPostController = async (req, res) => {
     const { postId } = req.params;
     const userId = req.userId;
     const result = await addToFeaturedPost(postId, userId);
-    return res.status(result.status).json(result);
+    return res.json({status: true, ...result});
   } catch (error) {
     console.log(error);
     return res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while adding post as featured.",
     });
   }
