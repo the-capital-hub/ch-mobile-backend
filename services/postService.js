@@ -2,6 +2,33 @@ import { PostModel } from "../models/Post.js";
 import { UserModel } from "../models/User.js";
 import { cloudinary } from "../utils/uploadImage.js";
 import { addNotification, deleteNotification } from "./notificationService.js";
+import { getUserById } from "./userService.js";
+
+const timeAgo = (date) => {
+  const now = new Date();
+  const seconds = Math.floor((now - new Date(date)) / 1000);
+  let interval = Math.floor(seconds / 31536000); // Years
+  if (interval > 1) return `${interval} years ago`;
+  if (interval === 1) return `1 year ago`;
+
+  interval = Math.floor(seconds / 2592000); // Months
+  if (interval > 1) return `${interval} months ago`;
+  if (interval === 1) return `1 month ago`;
+
+  interval = Math.floor(seconds / 86400); // Days
+  if (interval > 1) return `${interval} days ago`;
+  if (interval === 1) return `1 day ago`;
+
+  interval = Math.floor(seconds / 3600); // Hours
+  if (interval > 1) return `${interval} hours ago`;
+  if (interval === 1) return `1 hour ago`;
+
+  interval = Math.floor(seconds / 60); // Minutes
+  if (interval > 1) return `${interval} minutes ago`;
+  if (interval === 1) return `1 minute ago`;
+
+  return `just now`; // Fallback for less than a minute
+};
 
 export const createNewPost = async (data) => {
   try {
@@ -70,30 +97,6 @@ export const createNewPost = async (data) => {
     throw new Error("Error creating new post");
   }
 };
-
-// export const allPostsData = async () => {
-//   try {
-//     const allPosts = await PostModel.find()
-//       .populate({
-//         path: "user",
-//         select: "firstName lastName designation profilePicture",
-//       })
-//       .populate({
-//         path: "resharedPostId",
-//         select: "",
-//         populate: {
-//           path: "user",
-//           select: "firstName lastName designation profilePicture",
-//         },
-//       })
-//       .sort({ _id: -1 });
-
-//     // console.log(allPosts);
-//     return allPosts;
-//   } catch (error) {
-//     throw new Error("Error fetching all posts");
-//   }
-// };
 export const allPostsData = async (page, perPage) => {
   try {
     const skip = (page - 1) * perPage;
@@ -104,46 +107,139 @@ export const allPostsData = async (page, perPage) => {
         select:
           "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed",
         populate: [
-          {
-            path: "investor",
-            select: "companyName",
-          },
-          {
-            path: "startUp",
-            select: "company",
-          },
+          { path: "investor", select: "companyName" },
+          { path: "startUp", select: "company" },
         ],
       })
       .populate({
         path: "resharedPostId",
-        select: "",
-        populate: [
-          {
-            path: "user",
-            select:
-              "firstName lastName designation profilePicture investor startUp oneLinkId",
-            populate: [
-              {
-                path: "investor",
-                select: "companyName",
-              },
-              {
-                path: "startUp",
-                select: "company",
-              },
-            ],
-          },
-        ],
+        populate: {
+          path: "user",
+          select:
+            "firstName lastName designation profilePicture investor startUp oneLinkId",
+          populate: [
+            { path: "investor", select: "companyName" },
+            { path: "startUp", select: "company" },
+          ],
+        },
+      })
+      .populate({
+        path:"likes",
+        select: "firstName lastName"
       })
       .sort({ _id: -1 })
       .skip(skip)
       .limit(perPage);
 
-    return allPosts;
+    const posts = allPosts.map(({ _id, postType, description = "", image = "", likes, comments, createdAt, user }) => {
+      const { 
+        _id: userId, 
+        firstName: userFirstName, 
+        lastName: userLastName, 
+        profilePicture: userImage, 
+        designation: userDesignation, 
+        investor, 
+        startUp, 
+        isSubscribed: userIsSubscribed 
+      } = user || {};
+
+      return {
+        postId: _id,
+        postType,
+        description,
+        image,
+        likes,
+        comments,
+        createdAt: timeAgo(createdAt),
+        userId,
+        userFirstName,
+        userLastName,
+        userImage,
+        userDesignation,
+        userCompany: startUp?.company || investor?.companyName || "",
+        userIsSubscribed,
+      };
+    });
+
+    return posts;
   } catch (error) {
+    console.error("Error fetching all posts:", error);
     throw new Error("Error fetching all posts");
   }
 };
+
+export const allPostsDataPublic = async (page, perPage) => {
+  try {
+    const skip = (page - 1) * perPage;
+
+    const allPosts = await PostModel.find({ postType: "public" })
+      .populate({
+        path: "user",
+        select:
+          "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed",
+        populate: [
+          { path: "investor", select: "companyName" },
+          { path: "startUp", select: "company" },
+        ],
+      })
+      .populate({
+        path: "resharedPostId",
+        populate: {
+          path: "user",
+          select:
+            "firstName lastName designation profilePicture investor startUp oneLinkId",
+          populate: [
+            { path: "investor", select: "companyName" },
+            { path: "startUp", select: "company" },
+          ],
+        },
+      })
+      .populate({
+        path:"likes",
+        select: "firstName lastName"
+      })
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(perPage);
+
+    const posts = allPosts.map(({ _id, postType, description = "", image = "", likes, comments, createdAt, user }) => {
+      const { 
+        _id: userId, 
+        firstName: userFirstName, 
+        lastName: userLastName, 
+        profilePicture: userImage, 
+        designation: userDesignation, 
+        investor, 
+        startUp, 
+        isSubscribed: userIsSubscribed 
+      } = user || {};
+
+      return {
+        postId: _id,
+        postType,
+        description,
+        image,
+        likes,
+        comments,
+        createdAt: timeAgo(createdAt),
+        userId,
+        userFirstName,
+        userLastName,
+        userImage,
+        userDesignation,
+        userCompany: startUp?.company || investor?.companyName || "",
+        userIsSubscribed,
+      };
+    });
+
+    return posts;
+  } catch (error) {
+    console.error("Error fetching all posts:", error);
+    throw new Error("Error fetching all posts");
+  }
+};
+
+
 export const userPost = async (user) => {
   try {
     const userData = await UserModel.findById(user);

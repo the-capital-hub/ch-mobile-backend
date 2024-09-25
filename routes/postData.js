@@ -22,7 +22,8 @@ import {
   toggleCommentLikeController,
   removeCompanyUpdatePostController,
   getUserPost,
-  getPost
+  getPost,
+  getAllPostsPublic
 } from "../controllers/postController.js";
 import { authenticateToken } from "../middlewares/authenticateToken.js";
 const router = express.Router();
@@ -30,6 +31,7 @@ const router = express.Router();
 router.use(authenticateToken);
 
 router.get("/getposts", getAllPosts);
+router.get("/getPublicPosts", getAllPostsPublic);
 router.get("/get_post_by_id",getPost);
 router.get("/getSinglePost/:id", getSinglePost);
 router.get("/user_post",getUserPost)
