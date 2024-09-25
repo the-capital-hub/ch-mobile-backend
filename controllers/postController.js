@@ -80,7 +80,7 @@ export const getAllPostsPublic = async (req, res) => {
     const { page, perPage } = req.query;
     const user = req.userId;
     const pageNumber = parseInt(page) || 1;
-    const postsPerPage = parseInt(perPage) || 10; 
+    const postsPerPage = parseInt(perPage) || 2; 
     const data = await allPostsDataPublic(user ,pageNumber, postsPerPage);
     if (!data.length) {
       res.status(404).send({
