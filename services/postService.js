@@ -223,11 +223,12 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       } = user || {};
 
       const isLiked = likes.some(like => like._id == userIdd);
-
+      const isMyPost = userId == userIdd
 
       return {
         postId: _id,
         postType,
+        isMyPost,
         description,
         isLiked,
         image,
