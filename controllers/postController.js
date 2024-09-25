@@ -99,9 +99,10 @@ export const getAllPosts = async (req, res) => {
 export const getAllPostsPublic = async (req, res) => {
   try {
     const { page, perPage } = req.query;
+    const user = req.userId;
     const pageNumber = parseInt(page) || 1;
     const postsPerPage = parseInt(perPage) || 10; 
-    const data = await allPostsDataPublic(pageNumber, postsPerPage);
+    const data = await allPostsDataPublic(user ,pageNumber, postsPerPage);
     if (!data.length) {
       res.status(404).send({
         message: "No Posts yet",

@@ -168,7 +168,7 @@ export const allPostsData = async (page, perPage) => {
   }
 };
 
-export const allPostsDataPublic = async (page, perPage) => {
+export const allPostsDataPublic = async (userIdd , page, perPage) => {
   try {
     const skip = (page - 1) * perPage;
 
@@ -200,7 +200,11 @@ export const allPostsDataPublic = async (page, perPage) => {
       })
       .populate({
         path:"comments.user",
-        select:"firstName lastName"
+        select:"firstName lastName designation profilePicture investor startUp",
+        populate: [
+          { path: "investor", select: "companyName" },
+          { path: "startUp", select: "company" },
+        ],
       })
       .sort({ _id: -1 })
       .skip(skip)
@@ -218,17 +222,26 @@ export const allPostsDataPublic = async (page, perPage) => {
         isSubscribed: userIsSubscribed 
       } = user || {};
 
+      const isLiked = likes.some(like => like._id == userIdd);
+
+
       return {
         postId: _id,
         postType,
         description,
+        isLiked,
         image,
         likes,
         comments: comments.map(comment => ({
           _id: comment._id,
           text: comment.text,
           user: `${comment.user.firstName} ${comment.user.lastName}`,
-          likesCount: `${comment.likes.length}`
+          userDesignation: comment.user.designation,
+          userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
+          userImage: comment.user.profilePicture,
+          createdAt: timeAgo(comment.createdAt),
+          likesCount: `${comment.likes.length}`,
+          isLiked: comment.likes.some(like => like == userIdd)
         })),
         createdAt: timeAgo(createdAt),
         userId,
