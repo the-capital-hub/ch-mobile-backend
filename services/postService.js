@@ -242,6 +242,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
           userImage: comment.user.profilePicture,
           createdAt: timeAgo(comment.createdAt),
           likesCount: `${comment.likes.length}`,
+          isMyComment : comment.user._id == userIdd,
           isLiked: comment.likes.some(like => like == userIdd)
         })),
         createdAt: timeAgo(createdAt),
