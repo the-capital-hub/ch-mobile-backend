@@ -198,6 +198,10 @@ export const allPostsDataPublic = async (page, perPage) => {
         path:"likes",
         select: "firstName lastName"
       })
+      .populate({
+        path:"comments.user",
+        select:"firstName lastName"
+      })
       .sort({ _id: -1 })
       .skip(skip)
       .limit(perPage);
@@ -220,7 +224,12 @@ export const allPostsDataPublic = async (page, perPage) => {
         description,
         image,
         likes,
-        comments,
+        comments: comments.map(comment => ({
+          _id: comment._id,
+          text: comment.text,
+          user: `${comment.user.firstName} ${comment.user.lastName}`,
+          likesCount: `${comment.likes.length}`
+        })),
         createdAt: timeAgo(createdAt),
         userId,
         userFirstName,
