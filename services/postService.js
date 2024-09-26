@@ -319,94 +319,13 @@ export const singlePostData = async (_id) => {
   }
 };
 
-// export const savePostService = async (user, _id) => {
-//   try {
-//     const savedAlready = await UserModel.exists({
-//       _id: user,
-//       savedPosts: _id,
-//     });
-//     if (savedAlready) {
-//       return {
-//         message: "Already saved post",
-//       };
-//     }
-//     const updatedUser = await UserModel.findOneAndUpdate(
-//       { _id: user },
-//       { $push: { savedPosts: _id } },
-//       {
-//         new: true,
-//       }
-//     );
-//     return {
-//       message: "Post saved succesfully",
-//     };
-//   } catch (error) {
-//     console.error(error);
-//     throw new Error("Error saving post");
-//   }
-// };
-// export const savePostService = async (user, _id, collection) => {
-//   try {
-//     const savedAlready = await UserModel.exists({
-//       _id: user,
-//       savedPosts: _id,
-//     });
-//     if (savedAlready) {
-//       return {
-//         message: "Already saved post",
-//       };
-//     }
-//     const updatedUser = await UserModel.findOneAndUpdate(
-//       { _id: user },
-//       { $push: { savedPosts: _id } },
-//       {
-//         new: true,
-//       }
-//     );
-//     return {
-//       message: "Post saved succesfully",
-//     };
-//   } catch (error) {
-//     console.error(error);
-//     throw new Error("Error saving post");
-//   }
-// };
-
-// export const getUserSavedPosts = async (user) => {
-//   try {
-//     const { savedPosts, firstName } = await UserModel.findOne({
-//       _id: user,
-//     }).populate({
-//       path: "savedPosts",
-//       model: "Posts",
-//       populate: {
-//         path: "user",
-//         model: "Users",
-//         select: "firstName lastName profilePicture -_id",
-//       },
-//     });
-//     if (!savedPosts.length) {
-//       return {
-//         message: "No saved Posts",
-//       };
-//     }
-//     return {
-//       data: savedPosts,
-//       message: `Saved posts of ${firstName}`,
-//     };
-//   } catch (error) {
-//     console.error(error);
-//     throw new Error("Error getting saved posts");
-//   }
-// };
-
 //Like a post
 export const likeUnlikePost = async (postId, userId) => {
   try {
     const post = await PostModel.findById(postId);
     if (!post) {
       return {
-        status: 404,
+        status: false,
         message: "Post not found",
       };
     }
@@ -422,14 +341,14 @@ export const likeUnlikePost = async (postId, userId) => {
     }
     await post.save();
     return {
-      status: 200,
+      status: true,
       message: hasLiked ? "Post Unliked" : "Post Liked",
       data: post,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while liking/unliking the post.",
     };
   }
@@ -485,7 +404,7 @@ export const getComments = async (postId) => {
     });
     if (!post) {
       return {
-        status: 404,
+        status: false,
         message: "Post not found",
       };
     }
@@ -497,14 +416,14 @@ export const getComments = async (postId) => {
       }
     });
     return {
-      status: 200,
+      status: true,
       message: "Comments retrieved successfully",
       data: sortedComments,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while fetching comments.",
     };
   }
@@ -516,7 +435,7 @@ export const savePost = async (userId, collectionName, postId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -532,26 +451,26 @@ export const savePost = async (userId, collectionName, postId) => {
       user.savedPosts.push(collection);
       await user.save();
       return {
-        status: 200,
+        status: true,
         message: "Post saved successfully",
       };
     }
     if (collection.posts.includes(postId)) {
       return {
-        status: 400,
+        status: false,
         message: "Post is already in the collection",
       };
     }
     collection.posts.push(postId);
     await user.save();
     return {
-      status: 200,
+      status: true,
       message: "Post saved successfully",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while saving the post.",
     };
   }
@@ -562,7 +481,7 @@ export const unsavePost = async (userId, postId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -577,19 +496,19 @@ export const unsavePost = async (userId, postId) => {
         }
         await user.save();
         return {
-          status: 200,
+          status: true,
           message: "Post unsaved successfully",
         };
       }
     }
     return {
-      status: 400,
+      status: false,
       message: "Post not found in any collection",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while unsaving the post.",
     };
   }
@@ -601,7 +520,7 @@ export const getAllSavedPostCollections = async (userId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -624,10 +543,11 @@ export const getSavedPostsByCollection = async (userId, collectionName) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
+    
     let collection = {};
     if (collectionName === "my saved posts") {
       const posts = user.savedPosts.map((c) => c.posts);
@@ -638,46 +558,115 @@ export const getSavedPostsByCollection = async (userId, collectionName) => {
     } else {
       collection = user.savedPosts.find((c) => c.name === collectionName);
     }
+    
     if (!collection) {
       return {
-        status: 404,
+        status: false,
         message: `Collection not found`,
       };
     }
+    
     const postIds = collection.posts;
     const savedPosts = await PostModel.find({ _id: { $in: postIds } })
       .populate({
         path: "user",
-        select: "firstName lastName profilePicture designation oneLinkId",
+        select: "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed",
+        populate: [
+          { path: "investor", select: "companyName" },
+          { path: "startUp", select: "company" },
+        ],
       })
+      .populate({
+        path: "resharedPostId",
+        populate: {
+          path: "user",
+          select: "firstName lastName designation profilePicture investor startUp oneLinkId",
+          populate: [
+            { path: "investor", select: "companyName" },
+            { path: "startUp", select: "company" },
+          ],
+        },
+      })
+      .populate({
+        path: "likes",
+        select: "firstName lastName"
+      })
+      .populate({
+        path: "comments.user",
+        select: "firstName lastName designation profilePicture investor startUp",
+        populate: [
+          { path: "investor", select: "companyName" },
+          { path: "startUp", select: "company" },
+        ],
+      })
+      .sort({ _id: -1 })
       .exec();
-    for (let i = 0; i < savedPosts.length; i++) {
-      if (savedPosts[i].resharedPostId) {
-        const resharedPost = await PostModel.findById(
-          savedPosts[i].resharedPostId
-        )
-          .populate({
-            path: "user",
-            select: "firstName lastName profilePicture designation oneLinkId",
-          })
-          .exec();
-        savedPosts[i].resharedPostId = resharedPost;
-      }
-    }
+
+    const posts = savedPosts.map(({ _id, postType, description = "", image = "", likes, comments, createdAt, user, resharedPostId }) => {
+      const { 
+        _id: userId, 
+        firstName: userFirstName, 
+        lastName: userLastName, 
+        profilePicture: userImage, 
+        designation: userDesignation, 
+        investor, 
+        startUp, 
+        isSubscribed: userIsSubscribed 
+      } = user || {};
+
+      const isLiked = likes.some(like => like._id == userId);
+      const isMyPost = userId == userId;
+
+      // const resharedPostData = resharedPostId ? {
+      //   ...resharedPostId._doc, // Get the reshared post data
+      //   user: resharedPostId.user // Attach user data for reshared post
+      // } : null;
+
+      return {
+        postId: _id,
+        postType,
+        isMyPost,
+        description,
+        isLiked,
+        image,
+        likes,
+        comments: comments.map(comment => ({
+          _id: comment._id,
+          text: comment.text,
+          user: `${comment.user.firstName} ${comment.user.lastName}`,
+          userDesignation: comment.user.designation || "",
+          userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
+          userImage: comment.user.profilePicture,
+          createdAt: timeAgo(comment.createdAt),
+          likesCount: `${comment.likes.length}`,
+          isMyComment: comment.user._id == userId,
+          isLiked: comment.likes.some(like => like == userId)
+        })),
+        createdAt: timeAgo(createdAt),
+        userId,
+        userFirstName,
+        userLastName,
+        userImage,
+        userDesignation: userDesignation || "",
+        userCompany: startUp?.company || investor?.companyName || "",
+        userIsSubscribed
+      };
+    });
+
     return {
-      status: 200,
+      status: true,
       message: `Saved posts retrieved successfully`,
-      data: savedPosts,
+      data: posts,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
-      message:
-        "An error occurred while fetching saved posts by collection name.",
+      status: false,
+      message: "An error occurred while fetching saved posts by collection name.",
     };
   }
 };
+
 
 //get like count
 export const getLikeCount = async (postId) => {
@@ -685,7 +674,7 @@ export const getLikeCount = async (postId) => {
     const post = await PostModel.findById(postId).populate("likes");
     if (!post) {
       return {
-        status: 404,
+        status: false,
         message: "Post not found",
       };
     }
@@ -706,7 +695,7 @@ export const getLikeCount = async (postId) => {
     }
 
     return {
-      status: 200,
+      status: true,
       message: `${likeCount} ${
         likeCount === 1 ? "person" : "people"
       } liked this post`,
@@ -719,7 +708,7 @@ export const getLikeCount = async (postId) => {
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while fetching like count",
     };
   }
@@ -731,7 +720,7 @@ export const getUsersWhoLikedPost = async (postId) => {
     const post = await PostModel.findById(postId);
     if (!post) {
       return {
-        status: 404,
+        status: false,
         message: "Post not found",
       };
     }
@@ -740,14 +729,14 @@ export const getUsersWhoLikedPost = async (postId) => {
       select: "firstName lastName profilePicture oneLinkId",
     });
     return {
-      status: 200,
+      status: true,
       message: "Users who liked the post retrieved successfully",
       data: likedUsers.likes,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while fetching liked users.",
     };
   }
@@ -766,19 +755,19 @@ export const deletePost = async (postId, userId) => {
     }
     if (!deletedPost) {
       return {
-        status: 404,
+        status: false,
         message: "Post not found.",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "Post Deleted Successfully",
       data: deletedPost,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while deleting posts.",
     };
   }
@@ -788,13 +777,13 @@ export const addToCompanyUpdate = async (postId, userId) => {
     const user = await UserModel.findOne({ _id: userId });
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
     if (user.companyUpdate.includes(postId)) {
       return {
-        status: 400,
+        status: false,
         message: "Post is already in featured posts.",
       };
     }
@@ -803,13 +792,13 @@ export const addToCompanyUpdate = async (postId, userId) => {
     await user.save();
     await PostModel.findOneAndUpdate({ _id: postId }, { postType: "company" });
     return {
-      status: 200,
+      status: true,
       message: "Post added to featured posts",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding the post to featured posts.",
     };
   }
@@ -819,13 +808,13 @@ export const addToFeaturedPost = async (postId, userId) => {
     const user = await UserModel.findOne({ _id: userId });
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
     if (user.featuredPosts.includes(postId)) {
       return {
-        status: 400,
+        status: false,
         message: "Post is already in featured posts.",
       };
     }
@@ -833,13 +822,13 @@ export const addToFeaturedPost = async (postId, userId) => {
     await user.save();
 
     return {
-      status: 200,
+      status: true,
       message: "Post added to featured posts",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding the post to featured posts.",
     };
   }
@@ -851,21 +840,21 @@ export const getCompanyUpdateByUser = async (userId) => {
 
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
         companyUpdate: [],
       };
     }
 
     return {
-      status: 200,
+      status: true,
       message: "Featured posts retrieved successfully.",
       user,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while retrieving featured posts.",
       companyUpdate: [],
     };
@@ -877,21 +866,21 @@ export const getFeaturedPostsByUser = async (userId) => {
 
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
         featuredPosts: [],
       };
     }
 
     return {
-      status: 200,
+      status: true,
       message: "Featured posts retrieved successfully.",
       user,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while retrieving featured posts.",
       featuredPosts: [],
     };
@@ -908,19 +897,19 @@ export const removeCompanyUpdatePost = async (postId, userId) => {
     await PostModel.findOneAndUpdate({ _id: postId }, { postType: "public" });
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
 
     return {
-      status: 200,
+      status: true,
       message: "Post removed from featured posts.",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while removing the post from featured posts.",
     };
   }
@@ -935,19 +924,19 @@ export const removeFromFeaturedPost = async (postId, userId) => {
 
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
 
     return {
-      status: 200,
+      status: true,
       message: "Post removed from featured posts.",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while removing the post from featured posts.",
     };
   }
@@ -992,14 +981,14 @@ export const toggleCommentLike = async (postId, commentId, userId) => {
     const post = await PostModel.findById(postId);
     if (!post) {
       return {
-        status: 404,
+        status: false,
         message: "Post not found",
       };
     }
     const comment = post.comments.id(commentId);
     if (!comment) {
       return {
-        status: 404,
+        status: false,
         message: "Comment not found",
       };
     }
@@ -1018,14 +1007,14 @@ export const toggleCommentLike = async (postId, commentId, userId) => {
 
     const likeCount = comment.likes.length;
     return {
-      status: 200,
+      status: true,
       message: likeStatusMessage,
       likeCount: likeCount,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while toggling the comment like status.",
     };
   }
@@ -1037,19 +1026,19 @@ export const getPostById = async (postId) => {
    const post = await PostModel.findById(postId)
    if (!post) {
     return {
-      status: 404,
+      status: false,
       message: "Post not found.",
     };
   }
 
   return {
-    status: 200,
+    status: true,
     message: "Post removed from featured posts.",
     data:post
   };
   }catch(error){
     return {
-      status: 500,
+      status: false,
       message:"An error occurred while toggling the comment like status.",
     }
   }

@@ -128,7 +128,7 @@ export const likeUnlikePostController = async (req, res) => {
     const { postId } = req.params;
     // const { userId } = req.body;
     const response = await likeUnlikePost(postId, req.userId);
-    return res.status(response.status).send(response);
+    return res.send({...response})
   } catch (error) {
     console.error(error);
     return res.status(500).send({
@@ -159,7 +159,7 @@ export const getCommentsController = async (req, res) => {
   try {
     const { postId } = req.params;
     const response = await getComments(postId);
-    res.status(response.status).send(response);
+    res.send({...response})
   } catch (error) {
     console.error(error);
     return {
@@ -175,11 +175,11 @@ export const savePostController = async (req, res) => {
     const { postId } = req.params;
     const { userId, collectionName } = req.body;
     const response = await savePost(userId, collectionName, postId);
-    return res.status(response.status).send(response);
+    return res.send({...response});
   } catch (error) {
     console.error(error);
     return res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while saving the post.",
     });
   }
@@ -189,11 +189,11 @@ export const unsavePostController = async (req, res) => {
   try {
     const { userId, postId } = req.body;
     const response = await unsavePost(userId, postId);
-    return res.status(response.status).send(response);
+    return res.send({...response});
   } catch (error) {
     console.error(error);
     return res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while unsaving the post.",
     });
   }
@@ -220,11 +220,11 @@ export const getSavedPostsByCollectionController = async (req, res) => {
     const userId = req.params.userId;
     const { collectionName } = req.body;
     const response = await getSavedPostsByCollection(userId, collectionName);
-    return res.status(response.status).send(response);
+    return res.send({...response});
   } catch (error) {
     console.error(error);
     return res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred getting saved post.",
     });
   }
@@ -395,7 +395,7 @@ export const getPost = async (req,res) =>{
     return res.status(response.status).json(response.data)
   } catch (error){
     return res.status(500).json({
-      status:500,
+      status:false,
      message: "An error occurred while liking the comment.",
     })
   }
