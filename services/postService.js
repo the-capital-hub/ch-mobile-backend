@@ -171,6 +171,8 @@ export const allPostsData = async (page, perPage) => {
 export const allPostsDataPublic = async (userIdd , page, perPage) => {
   try {
     const skip = (page - 1) * perPage;
+    const user = await UserModel.findById(userIdd).populate('savedPosts.posts').exec();
+    const savedPostIds = user.savedPosts.flatMap(savedPost => savedPost.posts.map(post => post._id.toString()));
 
     const allPosts = await PostModel.find({ postType: "public" })
       .populate({
@@ -224,12 +226,15 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
 
       const isLiked = likes.some(like => like._id == userIdd);
       const isMyPost = userId == userIdd
+            const isSaved = savedPostIds.includes(_id.toString());
+
 
       return {
         postId: _id,
         postType,
         isMyPost,
         description,
+        isSaved,
         isLiked,
         image,
         likes,
