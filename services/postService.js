@@ -607,14 +607,12 @@ export const getAllSavedPostCollections = async (userId) => {
     }
     const collections = user.savedPosts;
     return {
-      status: 200,
       message: "Saved post collections retrieved successfully",
       data: collections,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
       message: "An error occurred while fetching saved post collections.",
     };
   }

@@ -204,11 +204,11 @@ export const getAllSavedPostCollectionsController = async (req, res) => {
   try {
     const userId = req.params.userId;
     const response = await getAllSavedPostCollections(userId);
-    return res.status(response.status).send(response);
+    return res.send({status:true, ...response});
   } catch (error) {
     console.error(error);
     return res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while getting saved post collections.",
     });
   }
