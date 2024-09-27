@@ -956,12 +956,12 @@ export const getExploreFiltersController = async (req, res) => {
   try {
     const { type } = req.query;
     const response = await getExploreFilters(type);
-    res.status(response.status).send(response);
+    res.send({status:true, ...response});
     return response;
   } catch (error) {
     console.error(error);
     res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while getting explore results.",
     });
   }

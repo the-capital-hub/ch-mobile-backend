@@ -790,7 +790,6 @@ export const getExploreFilters = async (type) => {
       // const startupSectors = await StartUpModel.distinct("sector");
       const startupCities = await StartUpModel.distinct("location");
       return {
-        status: 200,
         message: "Startup filters retrieved",
         data: {
           // sectors: startupSectors,
@@ -801,7 +800,6 @@ export const getExploreFilters = async (type) => {
       // const investorSectors = await InvestorModel.distinct("sector");
       const investorCities = await InvestorModel.distinct("location");
       return {
-        status: 200,
         message: "Investor filters retrieved",
         data: {
           // sectors: investorSectors,
@@ -812,7 +810,6 @@ export const getExploreFilters = async (type) => {
       // const founderSectors = await StartUpModel.distinct("sector");
       const founderCities = await StartUpModel.distinct("location");
       return {
-        status: 200,
         message: "Founder filters retrieved",
         data: {
           // sectors: founderSectors,
@@ -821,14 +818,12 @@ export const getExploreFilters = async (type) => {
       };
     } else {
       return {
-        status: 400,
         message: "Invalid 'type' parameter",
       };
     }
   } catch (error) {
     console.error("Error getting explore filters:", error);
     return {
-      status: 500,
       message: "An error occurred while getting explore filters.",
     };
   }
