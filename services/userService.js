@@ -680,7 +680,7 @@ export const getExplore = async (filters) => {
       }
       const startups = await StartUpModel.find(query).populate("founderId");
       return {
-        status: 200,
+        status: true,
         message: "Startup data retrieved",
         data: startups,
       };
@@ -723,7 +723,7 @@ export const getExplore = async (filters) => {
       }).select("-password")
         .populate("investor");
       return {
-        status: 200,
+        status: true,
         message: "Investors data retrieved",
         data: founders,
       };
@@ -765,20 +765,20 @@ export const getExplore = async (filters) => {
       }).select("-password")
         .populate("startUp");
       return {
-        status: 200,
+        status: true,
         message: "Founder data retrieved",
         data: founders,
       };
     } else {
       return {
-        status: 400,
+        status: false,
         message: "Invalid 'type' parameter",
       };
     }
   } catch (error) {
     console.error("Error getting explore results:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting explore results.",
     };
   }

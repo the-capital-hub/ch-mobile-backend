@@ -941,12 +941,12 @@ export const addUserAsInvestorController = async (req, res) => {
 export const getExploreController = async (req, res) => {
   try {
     const response = await getExplore(req.query);
-    res.status(response.status).send(response);
+    res.send({status:true, ...response});
     return response;
   } catch (error) {
     console.error(error);
     res.status(500).send({
-      status: 500,
+      status: false,
       message: "An error occurred while getting explore results.",
     });
   }
