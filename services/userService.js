@@ -11,6 +11,13 @@ import { comparePassword, hashPassword } from "../utils/passwordManager.js";
 
 const adminMail = "learn.capitalhub@gmail.com";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const options = { year: 'numeric', month: 'long' };
+  return new Date(dateString).toLocaleDateString('en-US', options);
+};
+
+
 export const getUsersService = async (info) => {
   try {
     const products = await UserModel.find({}).toArray();
@@ -679,10 +686,38 @@ export const getExplore = async (filters) => {
         query.company = { $regex: new RegExp(`^${searchQuery}`, 'i') };
       }
       const startups = await StartUpModel.find(query).populate("founderId");
+
+      const curatedStartups = startups.map(startup => ({
+        _id: startup._id,
+        fund_ask: startup.colorCard.fund_ask || "",
+        valuation: startup.colorCard.valuation || "",
+        raised_funds: startup.colorCard.raised_funds || "",
+        socialLinks: [
+          { name: 'website', link: startup.socialLinks.website },
+          { name: 'linkedin', link: startup.socialLinks.linkedin },
+          { name: 'instagram', link: startup.socialLinks.instagram },
+          { name: 'twitter', link: startup.socialLinks.twitter },
+          {name: 'facebook', link:startup.socialLinks.facebook} 
+        ],
+        company: startup.company || "",
+        description: startup.description || "",        sector: startup.sector || "",
+        tagline: startup.tagline || "",
+        stage: startup.stage || "",
+        lastFunding: formatDate(startup.lastFunding) || "",
+        location: startup.location || "",
+        logo: startup.logo || "",
+        TAM: startup.TAM || "",
+        SAM: startup.SAM || "",
+        SOM: startup.SOM || "",
+        noOfEmployees: startup.noOfEmployees || 0,
+        startedAtDate: formatDate(startup.startedAtDate) || "",
+        keyFocus: startup.keyFocus ? startup.keyFocus.split(',') : [],
+      }));
+
       return {
         status: true,
         message: "Startup data retrieved",
-        data: startups,
+        data: curatedStartups,
       };
 
       // for investors
