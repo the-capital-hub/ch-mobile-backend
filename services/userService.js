@@ -687,32 +687,48 @@ export const getExplore = async (filters) => {
       }
       const startups = await StartUpModel.find(query).populate("founderId");
 
-      const curatedStartups = startups.map(startup => ({
-        _id: startup._id,
-        fund_ask: startup.colorCard.fund_ask || "",
-        valuation: startup.colorCard.valuation || "",
-        raised_funds: startup.colorCard.raised_funds || "",
-        socialLinks: [
-          { name: 'website', link: startup.socialLinks.website },
-          { name: 'linkedin', link: startup.socialLinks.linkedin },
-          { name: 'instagram', link: startup.socialLinks.instagram },
-          { name: 'twitter', link: startup.socialLinks.twitter },
-          {name: 'facebook', link:startup.socialLinks.facebook} 
-        ],
-        company: startup.company || "",
-        description: startup.description || "",        sector: startup.sector || "",
-        tagline: startup.tagline || "",
-        stage: startup.stage || "",
-        lastFunding: formatDate(startup.lastFunding) || "",
-        location: startup.location || "",
-        logo: startup.logo || "",
-        TAM: startup.TAM || "",
-        SAM: startup.SAM || "",
-        SOM: startup.SOM || "",
-        noOfEmployees: startup.noOfEmployees || 0,
-        startedAtDate: formatDate(startup.startedAtDate) || "",
-        keyFocus: startup.keyFocus ? startup.keyFocus.split(',') : [],
-      }));
+      const curatedStartups = startups.map(startup => {
+        const socialLinks = [];
+      
+        if (startup.socialLinks.website) {
+          socialLinks.push({ name: 'website', link: startup.socialLinks.website });
+        }
+        if (startup.socialLinks.linkedin) {
+          socialLinks.push({ name: 'linkedin', link: startup.socialLinks.linkedin });
+        }
+        if (startup.socialLinks.instagram) {
+          socialLinks.push({ name: 'instagram', link: startup.socialLinks.instagram });
+        }
+        if (startup.socialLinks.twitter) {
+          socialLinks.push({ name: 'twitter', link: startup.socialLinks.twitter });
+        }
+        if (startup.socialLinks.facebook) {
+          socialLinks.push({ name: 'facebook', link: startup.socialLinks.facebook });
+        }
+      
+        return {
+          _id: startup._id,
+          fund_ask: startup.colorCard.fund_ask || "",
+          valuation: startup.colorCard.valuation || "",
+          raised_funds: startup.colorCard.raised_funds || "",
+          socialLinks, 
+          company: startup.company || "",
+          description: startup.description || "",
+          sector: startup.sector || "",
+          tagline: startup.tagline || "",
+          stage: startup.stage || "",
+          lastFunding: formatDate(startup.lastFunding) || "",
+          location: startup.location || "",
+          logo: startup.logo || "",
+          TAM: startup.TAM || "",
+          SAM: startup.SAM || "",
+          SOM: startup.SOM || "",
+          noOfEmployees: startup.noOfEmployees || 0,
+          startedAtDate: formatDate(startup.startedAtDate) || "",
+          keyFocus: startup.keyFocus ? startup.keyFocus.split(',') : [],
+        };
+      });
+      
 
       return {
         status: true,
