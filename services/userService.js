@@ -773,11 +773,27 @@ export const getExplore = async (filters) => {
         ...founderQuery
       }).select("-password")
         .populate("investor");
-      return {
-        status: true,
-        message: "Investors data retrieved",
-        data: founders,
-      };
+
+        const curatedInvestors = founders.map((investor) => {
+          const company = investor.investor;
+          return {
+            name: `${investor.firstName} ${investor.lastName}`,
+            location: investor.location || "",
+            designation: investor.designation || "",
+            profilePicture: investor.profilePicture || "",
+            bio: investor.bio || "",
+            companyName: company?.companyName || "",
+            companyLogo: company?.logo || "",
+            linkedin: investor.linkedin || "", 
+            startupsInvested: company?.startupsInvested || []
+          };
+        });
+      
+        return {
+          status: true,
+          message: "Investors data retrieved",
+          data: curatedInvestors,
+        };
 
       // for founder
     } else if (type === "founder") {
@@ -815,11 +831,56 @@ export const getExplore = async (filters) => {
         userStatus: "active",
       }).select("-password")
         .populate("startUp");
-      return {
-        status: true,
-        message: "Founder data retrieved",
-        data: founders,
-      };
+        const curatedFounders = founders.map((founder) => {
+          const startup = founder.startUp;
+          
+          // Extracting year from startedAtDate and month/year from lastFunding
+          const startedYear = new Date(startup.startedAtDate).getFullYear();
+          const lastFundingDate = new Date(startup.lastFunding);
+          const lastFunding = `${lastFundingDate.toLocaleString('default', { month: 'long' })} ${lastFundingDate.getFullYear()}`;
+      
+          const socialLinks = [];
+          if (startup.socialLinks.website) {
+            socialLinks.push({ name: 'website', link: startup.socialLinks.website });
+          }
+          if (startup.socialLinks.linkedin) {
+            socialLinks.push({ name: 'linkedin', link: startup.socialLinks.linkedin });
+          }
+          if (startup.socialLinks.instagram) {
+            socialLinks.push({ name: 'instagram', link: startup.socialLinks.instagram });
+          }
+          if (startup.socialLinks.twitter) {
+            socialLinks.push({ name: 'twitter', link: startup.socialLinks.twitter });
+          }
+          if (startup.socialLinks.facebook) {
+            socialLinks.push({ name: 'facebook', link: startup.socialLinks.facebook });
+          }
+      
+          return {
+            name: `${founder.firstName} ${founder.lastName}`,
+            profilePicture: founder.profilePicture || "",
+            designation: founder.designation || "",
+            company: startup.company || "",
+            location: startup.location || "",
+            startedAtDate: startedYear,
+            lastFunding,
+            bio: founder.bio || "",
+            education: founder.education || "",
+            experience: founder.experience || "",
+            companyStage: startup.companyStage || "",
+            companySector: startup.sector || "",
+            description: startup.description || "",
+            socialLinks,
+            email: startup.contactDetails?.email || "", 
+            companyLogo: startup.logo || "",
+          };
+        });
+      
+        return {
+          status: true,
+          message: "Founder data retrieved",
+          data: curatedFounders,
+        };
     } else {
       return {
         status: false,
