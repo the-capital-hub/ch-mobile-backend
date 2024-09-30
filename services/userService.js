@@ -691,7 +691,7 @@ export const getExplore = async (filters) => {
         const socialLinks = [];
       
         if (startup.socialLinks.website) {
-          socialLinks.push({ name: 'website', link: startup.socialLinks.website });
+          socialLinks.push({ name: 'website',logo:'https://www.thecapitalhub.in/static/media/Website.7f8cf970d51cb7e2ecfa706e662aab2c.svg', link: startup.socialLinks.website });
         }
         if (startup.socialLinks.linkedin) {
           socialLinks.push({ name: 'linkedin', link: startup.socialLinks.linkedin });
