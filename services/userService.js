@@ -8,6 +8,7 @@ import { secretKey } from "../constants/config.js";
 import { sendMail } from "../utils/mailHelper.js";
 import bcrypt from "bcrypt";
 import { comparePassword, hashPassword } from "../utils/passwordManager.js";
+import { VCModel } from "../models/VC.js"
 
 const adminMail = "learn.capitalhub@gmail.com";
 
@@ -656,6 +657,9 @@ export const getExplore = async (filters) => {
       age,
       education,
       searchQuery,
+      sector_focus,
+      stage_focus,
+      ticket_size
     } = filters;
 
     // for startups
@@ -886,6 +890,42 @@ export const getExplore = async (filters) => {
           message: "Founder data retrieved",
           data: curatedFounders,
         };
+
+          // for VC
+    } else if (type === "vc") {
+      const query = {};
+      if (sector_focus) {
+        query.sector_focus = sector_focus;
+      }
+      if (stage_focus) {
+        query.stage_focus = stage_focus;
+      }
+      if (ticket_size) {
+        query.ticket_size = { $gte: size };
+      }
+      
+      if (searchQuery) {
+        query.name = { $regex: new RegExp(`^${searchQuery}`, 'i') };
+      }
+      const VCs = await VCModel.find(query);
+      const curatedVCs = VCs.map(vc => ({
+        _id: vc._id,
+        name: vc.name,
+        logo: vc.logo,
+        location: vc.location,
+        stage_focus: vc.stage_focus,
+        sector_focus: vc.sector_focus,
+        ticket_size: vc.ticket_size,
+        age: vc.age,
+      }));
+    
+      return {
+        status: true,
+        message: "VC data retrieved",
+        data: curatedVCs,
+      };
+
+
     } else {
       return {
         status: false,
@@ -927,6 +967,18 @@ export const getExploreFilters = async (type) => {
       // const founderSectors = await StartUpModel.distinct("sector");
       const founderCities = await StartUpModel.distinct("location");
       return {
+        message: "Founder filters retrieved",
+        data: {
+          // sectors: founderSectors,
+          cities: founderCities,
+        },
+      };
+    }
+    else if (type === "vc") {
+      // const founderSectors = await StartUpModel.distinct("sector");
+      const founderCities = await StartUpModel.distinct("location");
+      return {
+        status: 200,
         message: "Founder filters retrieved",
         data: {
           // sectors: founderSectors,

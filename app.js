@@ -25,6 +25,8 @@ import achievementRoutes from "./routes/achievementRoutes.js";
 import liveDealRoutes from "./routes/liveDealRoutes.js";
 import articleRoutes from "./routes/articleRoute.js"
 import subscriptionRoutes from "./routes/subscriptionRoutes.js"
+import vcRoutes from "./routes/vcRoute.js"
+
 
 const allowedOrigins = ['http://localhost:3000','https://www.thecapitalhub.in'];
 
@@ -53,6 +55,7 @@ app.use("/achievement", achievementRoutes);
 app.use("/live_deals", liveDealRoutes);
 app.use("/article",articleRoutes)
 app.use("/subscription",subscriptionRoutes);
+app.use("/vc", vcRoutes);
 // documentation upload
 
 const storage = multer.diskStorage({
