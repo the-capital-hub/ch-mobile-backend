@@ -910,15 +910,14 @@ export const getExplore = async (filters) => {
       const VCs = await VCModel.find(query);
       const curatedVCs = VCs.map(vc => ({
         _id: vc._id,
+        logo: vc.logo || " " ,
         name: vc.name,
-        logo: vc.logo,
         location: vc.location,
         stage_focus: vc.stage_focus,
         sector_focus: vc.sector_focus,
-        ticket_size: vc.ticket_size,
+        ticket_size: vc.ticket_size || "",
         age: vc.age,
       }));
-    
       return {
         status: true,
         message: "VC data retrieved",
