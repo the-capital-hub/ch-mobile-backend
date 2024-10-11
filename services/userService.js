@@ -106,7 +106,7 @@ export const loginUserService = async ({ phoneNumber, password }) => {
 //get User by id
 export const getUserById = async (userId) => {
   try {
-    let user = await UserModel.findOne({ oneLinkId: userId }).populate('startUp');
+    let user = await UserModel.findOne({ oneLinkId: userId }).populate('startUp investor');
     if (!user) {
       user = await UserModel.findById(userId).populate(['startUp', 'investor']);
     }
@@ -117,10 +117,25 @@ export const getUserById = async (userId) => {
       };
     }
     user.password = undefined;
+
+    const userProfile = {
+      profilePicture: user.profilePicture,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      userName: user.userName,
+      designation: user.designation,
+      companyName: user.startUp?.company || user.investor?.companyName, 
+      location: user.startUp?.location || user.investor?.location, 
+      bio: user.bio,
+      education: user.education,
+      experience: user.experience,
+      connectionsCount: user.connections.length,
+      followersCount: user.connectionsReceived.length,
+      isSubscribed: user.isSubscribed
+    };
+
     return {
-      status: 200,
-      message: "User details retrieved successfully.",
-      data: user,
+...userProfile,
     };
   } catch (error) {
     console.error("Error getting user:", error);
@@ -130,6 +145,7 @@ export const getUserById = async (userId) => {
     };
   }
 };
+
 
 // Update User
 export const updateUserData = async ({ userId, newData }) => {

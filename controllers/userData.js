@@ -774,11 +774,11 @@ export const loginUserController = async (req, res, next) => {
 export const getUserByIdController = async (req, res) => {
   try {
     const response = await getUserById(req.params.id);
-    res.status(response.status).send(response);
+    res.send({status: true, message: "User details fetched", data:response});
   } catch (error) {
     console.error(error);
-    res.status(500).send({
-      status: 500,
+    res.send({
+      status: false,
       message: "An error occurred while creating the company.",
     });
   }
