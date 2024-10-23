@@ -26,7 +26,7 @@ export async function getAllNews(req, res) {
             title: article.title || "",            // Assuming `title` is the key for the title
             subtitle: article.description || "",   // Assuming `description` is the key for the subtitle
             readmore_url: article.url || ""        // Assuming `url` is the key for the article's read more link
-        }));
+        })).filter(article => article.image && article.title && article.subtitle && article.readmore_url);
 
         const status = result.status || 200;
         res.status(status).json({
@@ -62,7 +62,7 @@ export async function getTopHeadlines(req, res) {
             title: article.title || "",            // Assuming `title` is the key for the title
             subtitle: article.description || "",   // Assuming `description` is the key for the subtitle
             readmore_url: article.url || ""        // Assuming `url` is the key for the article's read more link
-        }));
+        })).filter(article => article.image && article.title && article.subtitle && article.readmore_url);
 
         const status = result.status || 200;
         res.status(status).json({
@@ -107,7 +107,7 @@ export async function getCountryHeadlines(req, res) {
             title: article.title || "",            // Assuming `title` is the key for the title
             subtitle: article.description || "",   // Assuming `description` is the key for the subtitle
             readmore_url: article.url || ""        // Assuming `url` is the key for the article's read more link
-        }));
+        })).filter(article => article.image && article.title && article.subtitle && article.readmore_url);
 
         const status = result.status || 200;
         res.status(status).json({
@@ -146,7 +146,7 @@ export async function getNewsByDate(req, res) {
             title: article.title || "",            // Assuming `title` is the key for the title
             subtitle: article.description || "",   // Assuming `description` is the key for the subtitle
             readmore_url: article.url || ""        // Assuming `url` is the key for the article's read more link
-        }));
+        })).filter(article => article.image && article.title && article.subtitle && article.readmore_url);
 
         res.status(200).json({
             status: true,
@@ -185,7 +185,8 @@ export async function getTodaysNews(req, res) {
             title: article.title || "",            // Assuming `title` is the key for the title
             subtitle: article.description || "",   // Assuming `description` is the key for the subtitle
             readmore_url: article.url || ""        // Assuming `url` is the key for the article's read more link
-        }));
+        }))
+        .filter(article => article.image && article.title && article.subtitle && article.readmore_url);
 
         res.status(200).json({
             status: true,
