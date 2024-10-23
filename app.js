@@ -26,7 +26,7 @@ import liveDealRoutes from "./routes/liveDealRoutes.js";
 import articleRoutes from "./routes/articleRoute.js"
 import subscriptionRoutes from "./routes/subscriptionRoutes.js"
 import vcRoutes from "./routes/vcRoute.js"
-
+import newsRouter from "./routes/newsRoutes.js"
 
 const allowedOrigins = ['http://localhost:3000','https://www.thecapitalhub.in'];
 
@@ -56,6 +56,7 @@ app.use("/live_deals", liveDealRoutes);
 app.use("/article",articleRoutes)
 app.use("/subscription",subscriptionRoutes);
 app.use("/vc", vcRoutes);
+app.use("/news",newsRouter);
 // documentation upload
 
 const storage = multer.diskStorage({
