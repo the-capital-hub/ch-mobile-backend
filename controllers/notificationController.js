@@ -86,11 +86,11 @@ export const getUnreadNotificationCountController = async (req, res) => {
   try {
     const userId = req.userId;
     const response = await getUnreadNotificationCount(userId);
-    return res.status(response.status).json(response);
+    return res.json(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      status: 500,
+    return res.json({
+      status: false,
       message: "An error occurred while getting the unread notification count",
     });
   }

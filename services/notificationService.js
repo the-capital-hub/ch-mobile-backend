@@ -231,20 +231,18 @@ export const getUnreadNotificationCount = async (userId) => {
 
     const filteredNotifications = notifications?.filter(notification => {
       return (
-        (notification.achievementId && notification.achievementId !== null) ||
-        (notification.meetingId && notification.meetingId !== null) ||
         (notification.connection && notification.connection !== null) ||
         (notification.post && notification.post !== null)
       );
     });
     return {
-      status: 200,
+      status: true,
       message: "Unread notification count retrieved",
       data: { unreadCount: filteredNotifications?.length },
     };
   } catch (error) {
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting the unread notification count",
     };
   }
