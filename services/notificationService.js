@@ -2,6 +2,43 @@ import { NotificationModel } from "../models/Notification.js";
 import { UserModel } from "../models/User.js";
 import { formatDistanceToNow } from 'date-fns';
 
+const timeAgo = (date) => {
+  const now = new Date();
+  const seconds = Math.floor((now - new Date(date)) / 1000);
+  let interval = Math.floor(seconds / 31536000); // Years
+  if (interval > 1) return `${interval} years ago`;
+  if (interval === 1) return `1 year ago`;
+
+  interval = Math.floor(seconds / 2592000); // Months
+  if (interval > 1) return `${interval} months ago`;
+  if (interval === 1) return `1 month ago`;
+
+  interval = Math.floor(seconds / 86400); // Days
+  if (interval > 1) return `${interval} days ago`;
+  if (interval === 1) return `1 day ago`;
+
+  interval = Math.floor(seconds / 3600); // Hours
+  if (interval > 1) return `${interval} hours ago`;
+  if (interval === 1) return `1 hour ago`;
+
+  interval = Math.floor(seconds / 60); // Minutes
+  if (interval > 1) return `${interval} minutes ago`;
+  if (interval === 1) return `1 minute ago`;
+
+  return `just now`; // Fallback for less than a minute
+};
+
+function formatSubtitle(description) {
+  // Remove HTML tags using a regular expression
+  const plainText = description.replace(/<\/?[^>]+(>|$)/g, "");
+  
+  const lines = plainText.split('.').filter(line => line.trim() !== '');
+
+  const result = lines.slice(0, 1).join(' ');
+  return lines.length > 1 ? result + '...' : result;
+}
+
+
 export const addNotification = async (recipient, sender, type, post = null, connection = null, meetingId = null, achievementId = null) => {
   try {
     const user = await UserModel.findOne({oneLinkId:recipient})
@@ -76,27 +113,25 @@ export const getNotificationsByUserId = async (userId) => {
 
       return {
         id: notification._id,
-        title: title.trim(), // New title logic
-        sub_title: subtitle,
+        title: title.trim(),
+        sub_title: formatSubtitle(subtitle),
         image: isPostType
           ? notification.post?.image || ""
           : isConnectionType
           ? notification.sender?.profilePicture || ""
           : "",
         type: notification.type,
-        date: formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true }), // Human-readable date
+        date: timeAgo(new Date(notification.createdAt)),
         is_read: notification.isRead || false,
       };
     });
 
-    // Return a proper HTTP response
     return {
       status: true,
       message: "All Notifications fetched",
       data: formattedNotifications,
     };
   } catch (error) {
-    // Log error to make sure we have proper visibility on it
     console.error("Error in getNotificationsByUserId: ", error);
     return {
       status: false,
