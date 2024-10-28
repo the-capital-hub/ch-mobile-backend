@@ -97,7 +97,7 @@ export const getNotificationsByUserId = async (userId) => {
 
     // Return a proper HTTP response
     return {
-      status: 200, // For Dhairya : Need to change this to bool
+      status: true,
       message: "All Notifications fetched",
       data: formattedNotifications,
     };
@@ -105,8 +105,9 @@ export const getNotificationsByUserId = async (userId) => {
     // Log error to make sure we have proper visibility on it
     console.error("Error in getNotificationsByUserId: ", error);
     return {
-      status: 500, // For Dhairya : Need to change this to bool
+      status: false,
       message: "An error occurred while getting the notifications",
+      data:"",
     };
   }
 };
@@ -124,18 +125,18 @@ export const markMessageAsRead = async (messageId) => {
     );
     if (!notification) {
       return {
-        status: 404,
+        status: false,
         message: "Notification not found",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "Message marked as read",
       data: notification,
     };
   } catch (error) {
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while marking the message as read",
     };
   }
@@ -149,17 +150,17 @@ export const markAllMessagesAsRead = async (userId) => {
     );
     if (result.nModified === 0) {
       return {
-        status: 404,
+        status: false,
         message: "No unread notifications found for the user",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "All messages marked as read",
     };
   } catch (error) {
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while marking all messages as read",
     };
   }

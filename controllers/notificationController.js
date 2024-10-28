@@ -41,13 +41,14 @@ export const getNotificationsByUserIdController = async (req, res) => {
   try {
     const { userId } = req.params;
     const response = await getNotificationsByUserId(userId);
-    return res.status(response.status).send(response);
+    return res.send(response);
   } catch (error) {
     console.log(error);
-    return {
-      staus: 500,
-      message: "An error occured while getting the notifications",
-    }
+   return res.json({
+    status: false,
+    message:"An error has occured in fetching notificaions",
+    data : null,
+   })
   }
 }
 
@@ -55,13 +56,14 @@ export const markMessageAsReadController = async (req, res) => {
   try {
     const { messageId } = req.params;
     const response = await markMessageAsRead(messageId);
-    return res.status(response.status).json(response);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      status: 500,
-      message: "An error occurred while marking the message as read",
-    });
+    return res.json({
+    status: false,
+    message:"An error has occured",
+    data : null,
+   })
   }
 };
 
@@ -69,13 +71,14 @@ export const markAllMessagesAsReadController = async (req, res) => {
   try {
     const userId = req.userId;
     const response = await markAllMessagesAsRead(userId);
-    return res.status(response.status).json(response);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      status: 500,
-      message: "An error occurred while marking all the message as read",
-    });
+    return res.json({
+      status: false,
+      message:"An error has occured",
+      data : null,
+     })
   }
 };
 
