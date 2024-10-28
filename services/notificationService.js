@@ -55,13 +55,16 @@ export const getNotificationsByUserId = async (userId) => {
 
       // Determine the title based on type
       let title = "";
+      let subtitle = ""
       if (isConnectionType) {
+        title =  `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''}`.trim();
         if (notification.type === 'connectionAccepted') {
-          title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} accepted your request`;
+          subtitle = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} accepted your request`;
         } else if (notification.type === 'connectionRequest') {
-          title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} sent you a request`;
+          subtitle = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} sent you a request`;
         }
       } else if (isPostType) {
+        subtitle = notification.post?.description || "" ;
         if (notification.type === 'postLiked') {
           title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} liked your post`;
         } else if (notification.type === 'postCommented') {
@@ -73,12 +76,8 @@ export const getNotificationsByUserId = async (userId) => {
 
       return {
         id: notification._id,
-        sub_title: title.trim(), // New title logic
-        title: isPostType
-          ? notification.post?.description || ""
-          : isConnectionType
-          ? `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''}`.trim()
-          : "",
+        title: title.trim(), // New title logic
+        sub_title: subtitle,
         image: isPostType
           ? notification.post?.image || ""
           : isConnectionType
