@@ -37,10 +37,6 @@ export const getNotificationsByUserId = async (userId) => {
         select: "firstName lastName profilePicture oneLinkId",
       })
       .populate({
-        path: "achievementId",
-        select: "title description badge",
-      })
-      .populate({
         path: "post",
         select: "image video description documentName",
       })
@@ -48,10 +44,9 @@ export const getNotificationsByUserId = async (userId) => {
 
     const filteredNotifications = notifications?.filter(notification => {
       return (
-        (notification.achievementId && notification.achievementId !== null) ||
         (notification.connection && notification.connection !== null) ||
         (notification.post && notification.post !== null)
-      ) && notification.type !== 'meeting'; // Exclude meeting type notifications
+      ) && notification.type !== 'meeting';
     });
 
     const formattedNotifications = filteredNotifications.map(notification => {
@@ -78,8 +73,8 @@ export const getNotificationsByUserId = async (userId) => {
 
       return {
         id: notification._id,
-        title: title.trim(), // New title logic
-        sub_title: isPostType
+        sub_title: title.trim(), // New title logic
+        title: isPostType
           ? notification.post?.description || ""
           : isConnectionType
           ? `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''}`.trim()
