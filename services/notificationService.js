@@ -1,6 +1,6 @@
 import { NotificationModel } from "../models/Notification.js";
-import { PostModel } from "../models/Post.js";
 import { UserModel } from "../models/User.js";
+import { formatDistanceToNow } from 'date-fns';
 
 export const addNotification = async (recipient, sender, type, post = null, connection = null, meetingId = null, achievementId = null) => {
   try {
@@ -42,31 +42,76 @@ export const getNotificationsByUserId = async (userId) => {
       })
       .populate({
         path: "post",
-        select: "image video description documentName"
+        select: "image video description documentName",
       })
       .sort({ _id: -1 });
 
     const filteredNotifications = notifications?.filter(notification => {
       return (
         (notification.achievementId && notification.achievementId !== null) ||
-        (notification.meetingId && notification.meetingId !== null) ||
         (notification.connection && notification.connection !== null) ||
         (notification.post && notification.post !== null)
-      );
+      ) && notification.type !== 'meeting'; // Exclude meeting type notifications
     });
 
+    const formattedNotifications = filteredNotifications.map(notification => {
+      const isPostType = notification.type.includes('post');
+      const isConnectionType = notification.type.includes('connection');
+
+      // Determine the title based on type
+      let title = "";
+      if (isConnectionType) {
+        if (notification.type === 'connectionAccepted') {
+          title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} accepted your request`;
+        } else if (notification.type === 'connectionRequest') {
+          title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} sent you a request`;
+        }
+      } else if (isPostType) {
+        if (notification.type === 'postLiked') {
+          title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} liked your post`;
+        } else if (notification.type === 'postCommented') {
+          title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} commented on your post`;
+        } else if (notification.type === 'postShared') {
+          title = `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''} shared your post`;
+        }
+      }
+
+      return {
+        id: notification._id,
+        title: title.trim(), // New title logic
+        sub_title: isPostType
+          ? notification.post?.description || ""
+          : isConnectionType
+          ? `${notification.sender?.firstName || ''} ${notification.sender?.lastName || ''}`.trim()
+          : "",
+        image: isPostType
+          ? notification.post?.image || ""
+          : isConnectionType
+          ? notification.sender?.profilePicture || ""
+          : "",
+        type: notification.type,
+        date: formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true }), // Human-readable date
+        is_read: notification.isRead || false,
+      };
+    });
+
+    // Return a proper HTTP response
     return {
-      status: 200,
-      message: "Notifications retrieved",
-      data: filteredNotifications,
+      status: 200, // For Dhairya : Need to change this to bool
+      message: "All Notifications fetched",
+      data: formattedNotifications,
     };
   } catch (error) {
+    // Log error to make sure we have proper visibility on it
+    console.error("Error in getNotificationsByUserId: ", error);
     return {
-      status: 500,
+      status: 500, // For Dhairya : Need to change this to bool
       message: "An error occurred while getting the notifications",
     };
   }
 };
+
+
 
 
 
