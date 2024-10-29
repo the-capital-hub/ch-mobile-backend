@@ -198,11 +198,11 @@ export const getStartupsBySearchController = async (req, res) => {
   try {
     const { searchQuery } = req.params;
     const response = await getStartupsBySearch(searchQuery);
-    res.status(response.status).send(response);
+    res.send(response);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({
-      status: 500,
+    res.json({
+      status: false,
       message: "An error occurred while fetching startups.",
     });
   }

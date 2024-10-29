@@ -342,23 +342,26 @@ export const getAllStartups = async () => {
 export const getStartupsBySearch = async (searchQuery) => {
   try {
     const startups = await StartUpModel.find({
-      company: { $regex: searchQuery, $options: 'i' },
-    });
+      company: { $regex: searchQuery, $options: 'i'},
+    }).select('_id company');
     if (startups.length === 0) {
       return {
-        status: 404,
+        status: false,
         message: "No startups found",
       };
     }
+    const startupData = {
+    
+    }
     return {
-      status: 200,
+      status: true,
       message: "Startups retrieved successfully.",
       data: startups,
     };
   } catch (error) {
     console.error("Error searching for startups:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while searching for startups.",
     };
   }
