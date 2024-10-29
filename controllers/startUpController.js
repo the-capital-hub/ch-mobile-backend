@@ -155,11 +155,11 @@ export const getStartupByFounderIdController = async (req, res) => {
   const { founderId } = req.params;
   try {
     const response = await getStartupByFounderId(founderId);
-    res.status(response.status).send(response);
+    res.send(response);
   } catch (err) {
     console.error("Error getting company:", err);
-    res.status(500).send({
-      status: 500,
+    res.send({
+      status: false,
       message: "An error occurred while getting company.",
     });
   }

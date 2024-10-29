@@ -7,6 +7,13 @@ import { MilestoneModel } from "../models/Milestones.js";
 
 const adminMail = "learn.capitalhub@gmail.com";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const options = { year: 'numeric', month: 'long' };
+  return new Date(dateString).toLocaleDateString('en-US', options);
+};
+
+
 export const createStartup = async (startUpData) => {
   try {
     if (startUpData?.logo) {
@@ -289,33 +296,83 @@ export const getStartupByFounderId = async (founderId) => {
     );
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
     if (!user.startUp) {
        return {
-         status: 404,
+         status: false,
          message: "User does not have a startup.",
       };
-     }
+    }
     const startUp = await StartUpModel.findOne({ _id:user.startUp });
 
-    // if (!user.startUp) {
-    //   return {
-    //     status: 404,
-    //     message: "User does not have a startup.",
-    //   };
-    // }
+    let isOwnCompany;
+
+    if (startUp.founderId == founderId){
+      isOwnCompany = true;
+    }
+    else{
+      isOwnCompany = false;
+    }
+
+    const socialLinks = [];
+      
+    if (startUp.socialLinks.website) {
+      socialLinks.push({ name: 'website', link: startUp.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+  }
+  if (startUp.socialLinks.linkedin) {
+      socialLinks.push({ name: 'linkedin', link: startUp.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+  }
+  if (startUp.socialLinks.instagram) {
+      socialLinks.push({ name: 'instagram', link: startUp.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+  }
+  if (startUp.socialLinks.twitter) {
+      socialLinks.push({ name: 'twitter', link: startUp.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+  }
+  if (startUp.socialLinks.facebook) {
+      socialLinks.push({ name: 'facebook', link: startUp.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+  }
+
+    const curatedStartup = {
+      name: startUp.company,
+      tagline : startUp.tagline || "",
+      location: startUp.location || "",
+      foundingDate :formatDate(startUp.startedAtDate) || "NA",
+      lastFunding : formatDate(startUp.lastFunding) || "NA",
+      stage : startUp.stage || "",
+      sector: startUp.sector || "",
+      description: startUp.description || "",
+      numberOfEmployees: startUp.noOfEmployees || "NA",
+      vision: startUp.vision || "",
+      mission:startUp.mission || "",
+      TAM: startUp.TAM || "NA",
+      SOM: startUp.SOM || "NA",
+      SAM: startUp.SAM || "NA",
+      lastRoundInvestment: startUp.colorCard.last_round_investment || "NA",
+      totalInvestment: startUp.colorCard.total_investment || "NA",
+      noOfInvesters: startUp.colorCard.no_of_investers || "NA",
+      fundAsk: startUp.colorCard.fund_ask || "NA",
+      valuation: startUp.colorCard.valuation || "NA",
+      raisedFunds: startUp.colorCard.raised_funds || "NA",
+      lastYearRevenue: startUp.colorCard.last_year_revenue || "NA",
+      target: startUp.colorCard.target || "NA",
+      socialLinks: socialLinks,
+      keyFocus: startUp.keyFocus || "",
+      team : startUp.team,
+      isOwnCompany: isOwnCompany,
+    }
+
     return {
-      status: 200,
+      status: true,
       message: "StartUp details retrieved successfully.",
-      data: startUp,
+      data: curatedStartup,
     };
   } catch (err) {
     console.error("Error getting StartUp details:", err);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting StartUp details.",
     };
   }
@@ -349,9 +406,6 @@ export const getStartupsBySearch = async (searchQuery) => {
         status: false,
         message: "No startups found",
       };
-    }
-    const startupData = {
-    
     }
     return {
       status: true,

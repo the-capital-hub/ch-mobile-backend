@@ -912,12 +912,12 @@ export const addStartupToUserController = async (req, res) => {
   try {
     const { userId, startUpId } = req.body;
     const response = await addStartupToUser(userId, startUpId);
-    res.status(response.status).send(response);
+    res.send(response);
     return response;
   } catch (error) {
     console.error(error);
-    res.status(500).send({
-      status: 500,
+    res.json({
+      status: false,
       message: "An error occurred while adding startups to user.",
     });
   }

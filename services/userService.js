@@ -598,7 +598,7 @@ export const addStartupToUser = async (userId, startUpId) => {
     );
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
@@ -612,7 +612,7 @@ export const addStartupToUser = async (userId, startUpId) => {
     }
 
     return {
-      status: 200,
+      status: true,
       message: "Startup added to user successfully.",
       data: user,
       isFirst,
@@ -620,7 +620,7 @@ export const addStartupToUser = async (userId, startUpId) => {
   } catch (error) {
     console.error("Error adding startups to user:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding startups to user.",
     };
   }
