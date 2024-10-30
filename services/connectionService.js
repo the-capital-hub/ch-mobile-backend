@@ -2,6 +2,31 @@ import { ConnectionModel } from "../models/Connection.js";
 import { UserModel } from "../models/User.js";
 import { addNotification, deleteNotification } from "./notificationService.js";
 
+
+const formatDate = (date) => {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  const days = Math.floor(seconds / 86400);
+  const months = Math.floor(days / 30); 
+  const years = Math.floor(days / 365);
+
+  if (years > 1) return `${years} years ago`;
+  if (years === 1) return `1 year ago`;
+  if (months > 1) return `${months} months ago`;
+  if (months === 1) return `1 month ago`;
+  if (days > 1) return `${days} days ago`;
+  if (days === 1) return `1 day ago`;
+  
+  const hours = Math.floor(seconds / 3600);
+  if (hours > 1) return `${hours} hours ago`;
+  if (hours === 1) return `1 hour ago`;
+  
+  const minutes = Math.floor(seconds / 60);
+  if (minutes > 1) return `${minutes} minutes ago`;
+  if (minutes === 1) return `1 minute ago`;
+
+  return 'just now';
+};
+
 //send connect request
 export const sendConnectionRequest = async (senderId, receiverId) => {
   try {
@@ -54,9 +79,11 @@ export const getSentPendingConnectionRequests = async (userId) => {
       sender: userId,
       status: "pending",
     }).populate("receiver", "firstName lastName profilePicture designation startUp investor oneLinkId");
-    for (const request of sentRequests) {
+
+    await Promise.all(sentRequests.map(async (request) => {
       await request.receiver.populate("startUp investor");
-    }
+    }));
+
     if (sentRequests.length === 0) {
       return {
         status: true,
@@ -64,17 +91,28 @@ export const getSentPendingConnectionRequests = async (userId) => {
         data: [],
       };
     }
+
+    const formattedRequests = sentRequests.map((request) => {
+      const formattedCreatedAt = formatDate(request.createdAt);
+      return {
+          id: request.receiver._id,
+          firstName: request.receiver.firstName,
+          lastName: request.receiver.lastName,
+          profilePicture: request.receiver.profilePicture || "",
+          createdAt: formattedCreatedAt,
+      };
+    });
+
     return {
       status: true,
       message: "Sent pending connection requests retrieved successfully",
-      data: sentRequests,
+      data: formattedRequests,
     };
   } catch (error) {
     console.error(error);
     return {
       status: false,
-      message:
-        "An error occurred while getting sent pending connection requests.",
+      message: "An error occurred while getting sent pending connection requests.",
     };
   }
 };
@@ -126,10 +164,17 @@ export const getPendingConnectionRequests = async (userId) => {
     for (const request of pendingRequests) {
       await request.sender.populate("startUp investor");
     }
+    const formattedRequests = pendingRequests.map((request) => ({
+      id: request.sender._id,
+      firstName: request.sender.firstName,
+      lastName: request.sender.lastName,
+      profilePicture: request.sender.profilePicture || "",
+      createdAt: formatDate(request.createdAt),
+    }));
     return {
       status: true,
       message: "Pending requests retrived successfully",
-      data: pendingRequests,
+      data: formattedRequests,
     };
   } catch (error) {
     console.log(error);
@@ -245,10 +290,17 @@ export const getUserConnections = async (userId) => {
         message: "User not found",
       };
     }
+    const connectionsData = user.connections.map(connection => ({
+      id: connection._id,
+      firstName: connection.firstName || "",
+      lastName: connection.lastName || "",
+      designation: connection.designation || "",
+      profilePicture: connection.profilePicture || "",
+    }));
     return {
       status: true,
       message: "Connections retrieved successfully",
-      data: user.connections,
+      data: connectionsData,
     };
   } catch (error) {
     console.log(error);
