@@ -104,7 +104,7 @@ export const deleteStartUp = async (startUpId, userId) => {
     if (!user._id.equals(startUp.founderId)) {
       await UserModel.findOneAndUpdate({ _id: userId }, { startUp: null });
       return {
-        status: 200,
+        status: true,
         message: "StartUp deleted successfully.",
         delete_status: true,
       };
@@ -116,7 +116,7 @@ export const deleteStartUp = async (startUpId, userId) => {
         founderId: userId,
       });
       return {
-        status: 200,
+        status: true,
         message: "StartUp deleted successfully.",
         delete_status: true,
       };
@@ -124,7 +124,7 @@ export const deleteStartUp = async (startUpId, userId) => {
   } catch (err) {
     console.log(err);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while creating the company.",
     };
   }
@@ -337,6 +337,7 @@ export const getStartupByFounderId = async (founderId) => {
 
     const curatedStartup = {
       name: startUp.company,
+      logo: startUp.logo || "",
       tagline : startUp.tagline || "",
       location: startUp.location || "",
       foundingDate :formatDate(startUp.startedAtDate) || "NA",
@@ -359,7 +360,7 @@ export const getStartupByFounderId = async (founderId) => {
       lastYearRevenue: startUp.colorCard.last_year_revenue || "NA",
       target: startUp.colorCard.target || "NA",
       socialLinks: socialLinks,
-      keyFocus: startUp.keyFocus || "",
+      keyFocus: startUp.keyFocus ? startUp.keyFocus.split(',') : [],
       team : startUp.team,
       isOwnCompany: isOwnCompany,
     }

@@ -183,11 +183,11 @@ export const deleteStartUpController=async(req,res)=>{
   try{
  
     const response= await deleteStartUp(req.body.startUpId,req.userId);
-    res.status(response?.status).send(response);
+    res.send(response);
   }catch(error){
     console.error("Error:", error);
-    res.status(500).send({
-      status: 500,
+    res.send({
+      status: false,
       message: "An error occurred while fetching startups.",
     });
   }

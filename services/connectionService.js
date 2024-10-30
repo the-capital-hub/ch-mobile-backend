@@ -12,7 +12,7 @@ export const sendConnectionRequest = async (senderId, receiverId) => {
     });
     if (existingConnection) {
       return {
-        status: 400,
+        status: false,
         message: "Connection request already sent",
         data: [],
       };
@@ -34,14 +34,14 @@ export const sendConnectionRequest = async (senderId, receiverId) => {
     const type = "connectionRequest";
     await addNotification(receiverId, senderId, type, null, connection._id);
     return {
-      status: 200,
+      status: true,
       message: "Connection Request Sent",
       data: connection,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while sending connection request.",
     };
   }
@@ -59,20 +59,20 @@ export const getSentPendingConnectionRequests = async (userId) => {
     }
     if (sentRequests.length === 0) {
       return {
-        status: 200,
+        status: true,
         message: "No pending request found",
         data: [],
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "Sent pending connection requests retrieved successfully",
       data: sentRequests,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message:
         "An error occurred while getting sent pending connection requests.",
     };
@@ -85,7 +85,7 @@ export const cancelConnectionRequest = async (connectionId) => {
     const connection = await ConnectionModel.findById(connectionId);
     if (!connection) {
       return {
-        status: 404,
+        status: false,
         message: "Connection not found",
       };
     }
@@ -101,14 +101,14 @@ export const cancelConnectionRequest = async (connectionId) => {
       { $pull: { connectionsReceived: connection.sender } }
     );
     return {
-      status: 200,
+      status: true,
       message: "Connection Request Canceled",
       data: connection,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while canceling the connection request.",
     };
   }
@@ -127,14 +127,14 @@ export const getPendingConnectionRequests = async (userId) => {
       await request.sender.populate("startUp investor");
     }
     return {
-      status: 200,
+      status: true,
       message: "Pending requests retrived successfully",
       data: pendingRequests,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting pending connection request.",
     };
   }
@@ -182,7 +182,7 @@ export const acceptConnectionRequest = async (connectionId) => {
     const type = "connectionAccepted";
     await addNotification(sender._id, receiver._id, type, null, connection._id);
     return {
-      status: 200,
+      status: true,
       message: "Connection Accepted",
       data: connection,
       isFirst: isFirst,
@@ -190,7 +190,7 @@ export const acceptConnectionRequest = async (connectionId) => {
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while accepting the connection request.",
     };
   }
@@ -215,14 +215,14 @@ export const rejectConnectionRequest = async (connectionId) => {
     const type = "connectionAccepted";
     await deleteNotification(connection.sender, connection.receiver, type, connection._id);
     return {
-      status: 200,
+      status: true,
       message: "Connection Rejected",
       data: connection,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while rejecting the connection request.",
     };
   }
@@ -241,19 +241,19 @@ export const getUserConnections = async (userId) => {
 
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "Connections retrieved successfully",
       data: user.connections,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting user connections.",
     };
   }
@@ -265,7 +265,7 @@ export const removeConnection = async (loggedUserId, otherUserId) => {
     // const connection = await ConnectionModel.findById(connectionId);
     // if (!connection) {
     //   return {
-    //     status: 404,
+    //     status: false,
     //     message: "Connection not found",
     //   };
     // }
@@ -295,13 +295,13 @@ export const removeConnection = async (loggedUserId, otherUserId) => {
       { $pull: { connections: loggedUserId } }
     );
     return {
-      status: 200,
+      status: true,
       message: "Connection Removed",
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while removing the connection.",
     };
   }
@@ -312,7 +312,7 @@ export const getRecommendations = async (userId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -356,21 +356,21 @@ export const getRecommendations = async (userId) => {
         userStatus: "active",
       });
       return {
-        status: 200,
+        status: true,
         message: "Recommended User data retrieved successfully",
         data: users,
       };
     }
     const users = await UserModel.find({ _id: { $in: recommendations } });
     return {
-      status: 200,
+      status: true,
       message: "Recommended User data retrieved successfully",
       data: users,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting recommendations",
     };
   }
