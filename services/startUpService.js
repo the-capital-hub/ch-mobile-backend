@@ -336,6 +336,7 @@ export const getStartupByFounderId = async (founderId) => {
   }
 
     const curatedStartup = {
+      startUpId : startUp._id,
       name: startUp.company,
       logo: startUp.logo || "",
       tagline : startUp.tagline || "",
