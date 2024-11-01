@@ -95,6 +95,7 @@ export const getSentPendingConnectionRequests = async (userId) => {
     const formattedRequests = sentRequests.map((request) => {
       const formattedCreatedAt = formatDate(request.createdAt);
       return {
+          connectionId: request._id,
           id: request.receiver._id,
           firstName: request.receiver.firstName,
           lastName: request.receiver.lastName,
@@ -165,6 +166,7 @@ export const getPendingConnectionRequests = async (userId) => {
       await request.sender.populate("startUp investor");
     }
     const formattedRequests = pendingRequests.map((request) => ({
+      connectionId: request._id,
       id: request.sender._id,
       firstName: request.sender.firstName,
       lastName: request.sender.lastName,
