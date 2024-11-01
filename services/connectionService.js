@@ -316,22 +316,6 @@ export const getUserConnections = async (userId) => {
 //remove accepted connection
 export const removeConnection = async (loggedUserId, otherUserId) => {
   try {
-    // const connection = await ConnectionModel.findById(connectionId);
-    // if (!connection) {
-    //   return {
-    //     status: false,
-    //     message: "Connection not found",
-    //   };
-    // }
-    // if (connection.status === "accepted") {
-    //   await UserModel.findByIdAndUpdate(connection.sender, {
-    //     $pull: { connections: connection.receiver },
-    //   });
-    //   await UserModel.findByIdAndUpdate(connection.receiver, {
-    //     $pull: { connections: connection.sender },
-    //   });
-    // }
-    // await ConnectionModel.findByIdAndRemove(connectionId);
     await ConnectionModel.deleteMany({
       sender: loggedUserId,
       receiver: otherUserId,
