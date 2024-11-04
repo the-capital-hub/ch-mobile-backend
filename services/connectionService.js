@@ -100,6 +100,7 @@ export const getSentPendingConnectionRequests = async (userId) => {
           firstName: request.receiver.firstName,
           lastName: request.receiver.lastName,
           profilePicture: request.receiver.profilePicture || "",
+          designation: receiver.designation,
           createdAt: formattedCreatedAt,
       };
     });
@@ -171,6 +172,7 @@ export const getPendingConnectionRequests = async (userId) => {
       firstName: request.sender.firstName,
       lastName: request.sender.lastName,
       profilePicture: request.sender.profilePicture || "",
+      designation: request.sender.designation,
       createdAt: formatDate(request.createdAt),
     }));
     return {
@@ -293,6 +295,7 @@ export const getUserConnections = async (userId) => {
       };
     }
     const connectionsData = user.connections.map(connection => ({
+      connectionId: "",
       id: connection._id,
       firstName: connection.firstName || "",
       lastName: connection.lastName || "",
