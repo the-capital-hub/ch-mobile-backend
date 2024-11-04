@@ -100,7 +100,7 @@ export const getSentPendingConnectionRequests = async (userId) => {
           firstName: request.receiver.firstName,
           lastName: request.receiver.lastName,
           profilePicture: request.receiver.profilePicture || "",
-          designation: receiver.designation,
+          designation: request.receiver.designation,
           createdAt: formattedCreatedAt,
       };
     });
