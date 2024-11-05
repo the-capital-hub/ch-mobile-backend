@@ -140,10 +140,41 @@ export const cancelConnectionRequest = async (connectionId) => {
       { _id: connection.receiver },
       { $pull: { connectionsReceived: connection.sender } }
     );
+
+    const sentRequests = await ConnectionModel.find({
+      sender: connection.sender,
+      status: "pending",
+    }).populate("receiver", "firstName lastName profilePicture designation startUp investor oneLinkId");
+
+    await Promise.all(sentRequests.map(async (request) => {
+      await request.receiver.populate("startUp investor");
+    }));
+
+    if (sentRequests.length === 0) {
+      return {
+        status: true,
+        message: "No pending request found",
+        data: [],
+      };
+    }
+
+    const formattedRequests = sentRequests.map((request) => {
+      const formattedCreatedAt = formatDate(request.createdAt);
+      return {
+          connectionId: request._id,
+          id: request.receiver._id,
+          firstName: request.receiver.firstName,
+          lastName: request.receiver.lastName,
+          profilePicture: request.receiver.profilePicture || "",
+          designation: request.receiver.designation,
+          createdAt: formattedCreatedAt,
+      };
+    });
+
     return {
       status: true,
       message: "Connection Request Canceled",
-      data: connection,
+      data: formattedRequests,
     };
   } catch (error) {
     console.error(error);
@@ -230,11 +261,31 @@ export const acceptConnectionRequest = async (connectionId) => {
 
     const type = "connectionAccepted";
     await addNotification(sender._id, receiver._id, type, null, connection._id);
+
+    const pendingRequests = await ConnectionModel.find({
+      receiver: receiver._id,
+      status: "pending",
+    })
+      .populate("sender", "firstName lastName profilePicture designation startUp investor oneLinkId")
+      .sort({ _id: "-1" });
+    for (const request of pendingRequests) {
+      await request.sender.populate("startUp investor");
+    }
+    const formattedRequests = pendingRequests.map((request) => ({
+      connectionId: request._id,
+      id: request.sender._id,
+      firstName: request.sender.firstName,
+      lastName: request.sender.lastName,
+      profilePicture: request.sender.profilePicture || "",
+      designation: request.sender.designation,
+      createdAt: formatDate(request.createdAt),
+    }));
+
+
     return {
       status: true,
       message: "Connection Accepted",
-      data: connection,
-      isFirst: isFirst,
+      data: formattedRequests
     };
   } catch (error) {
     console.log(error);
@@ -263,10 +314,31 @@ export const rejectConnectionRequest = async (connectionId) => {
     );
     const type = "connectionAccepted";
     await deleteNotification(connection.sender, connection.receiver, type, connection._id);
+
+    const pendingRequests = await ConnectionModel.find({
+      receiver: connection.receiver,
+      status: "pending",
+    })
+      .populate("sender", "firstName lastName profilePicture designation startUp investor oneLinkId")
+      .sort({ _id: "-1" });
+    for (const request of pendingRequests) {
+      await request.sender.populate("startUp investor");
+    }
+    const formattedRequests = pendingRequests.map((request) => ({
+      connectionId: request._id,
+      id: request.sender._id,
+      firstName: request.sender.firstName,
+      lastName: request.sender.lastName,
+      profilePicture: request.sender.profilePicture || "",
+      designation: request.sender.designation,
+      createdAt: formatDate(request.createdAt),
+    }));
+
+
     return {
       status: true,
       message: "Connection Rejected",
-      data: connection,
+      data: formattedRequests,
     };
   } catch (error) {
     console.log(error);
@@ -335,9 +407,35 @@ export const removeConnection = async (loggedUserId, otherUserId) => {
       { _id: otherUserId },
       { $pull: { connections: loggedUserId } }
     );
+
+
+    const user = await UserModel.findById(loggedUserId).populate(
+      "connections",
+      "firstName lastName profilePicture designation startUp investor oneLinkId"
+    );
+    for (const connection of user.connections) {
+      await connection.populate("startUp investor");
+    }
+
+    if (!user) {
+      return {
+        status: false,
+        message: "User not found",
+      };
+    }
+    const connectionsData = user.connections.map(connection => ({
+      connectionId: "",
+      id: connection._id,
+      firstName: connection.firstName || "",
+      lastName: connection.lastName || "",
+      designation: connection.designation || "",
+      profilePicture: connection.profilePicture || "",
+    }));
+
     return {
       status: true,
       message: "Connection Removed",
+      data: connectionsData
     };
   } catch (error) {
     console.log(error);
