@@ -38,7 +38,7 @@ export const createFolder = async (args) => {
     const folderExists = await Folder.findOne({ userId: userId, folderName: folderName });
     if (folderExists) {
       return {
-        status: 200,
+        status: true,
         message: "Folder Already Exists",
       };
     }
@@ -48,14 +48,14 @@ export const createFolder = async (args) => {
     });
     await folder.save();
     return {
-      status: 200,
+      status: true,
       message: "Folder Created",
       data: folder
     };
   } catch (error) {
     console.error("Error creating folder:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while creating folder.",
     };
   }
@@ -70,14 +70,14 @@ export const getFolderByUser = async (oneLinkId) => {
     const allFolderNamesSet = new Set([...defaultFolderNames, ...folders]);
     const allFolderNames = [...allFolderNamesSet];
     return {
-      status: 200,
+      status: true,
       message: "Folder Created",
       data: allFolderNames,
     };
   } catch (error) {
     console.error("Error getting folders:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting folders.",
     };
   }
@@ -135,26 +135,38 @@ const getMimeType = (filename) => {
   return mimeTypes[ext] || 'application/octet-stream';
 };
 
-export const getDocumentByUser = async (args) => {
+export const getDocumentByUser = async (userId, folder_name) => {
   try {
-    const { oneLinkId, folderName } = args;
-    const user = await UserModel.findOne({ oneLinkId: oneLinkId });
-    const file = await File.find({ userId: user._id, folderName: folderName });
-    if (!file) {
+    const files = await File.find({ userId: userId, folderName: folder_name });
+    if (!files) {
       return {
-        status: 404,
+        status: false,
         message: "Document not found.",
       };
     }
+
+    const transformedFiles = files.map(file => {
+      const extension = file.fileName.split('.').pop().toLowerCase();
+      
+      return {
+        _id: file._id,
+        userId: file.userId,
+        fileName: file.fileName,
+        folderName: file.folderName,
+        fileUrl: file.fileUrl,
+        extension: extension
+      };
+    });
+
     return {
-      status: 200,
+      status: true,
       message: "Documents details retrieved successfully.",
-      data: file,
+      data: transformedFiles,
     };
   } catch (error) {
     console.error("Error getting document:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting documents.",
     };
   }
@@ -167,7 +179,7 @@ export const renameFolder = async (args) => {
 
     if (!folder) {
       return {
-        status: 404,
+        status: false,
         message: "Folder not found.",
       };
     }
@@ -176,14 +188,14 @@ export const renameFolder = async (args) => {
     await folder.save();
 
     return {
-      status: 200,
+      status: true,
       message: "Folder renamed successfully.",
       data: folder,
     };
   } catch (error) {
     console.error("Error renaming folder:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while renaming the folder.",
     };
   }
@@ -196,7 +208,7 @@ export const deleteFolder = async (args) => {
     const folder = await Folder.findOne({ _id: folderId });
     if (!folder) {
       return {
-        status: 404,
+        status: false,
         message: "Folder not found.",
       };
     }
@@ -204,36 +216,58 @@ export const deleteFolder = async (args) => {
     await File.deleteMany({ folderId: folderId });
     await Folder.deleteOne({ _id: folder._id });
     return {
-      status: 200,
+      status: true,
       message: "Folder deleted successfully.",
     };
   } catch (error) {
     console.error("Error deleting folder:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while deleting the folder.",
     };
   }
 };
 
-export const deleteDocument = async (documentId) => {
+export const deleteDocument = async (documentId, userId, folder_name) => {
   try {
     const document = await File.findOne({ _id: documentId });
     if (!document) {
       return {
-        status: 404,
+        status: false,
         message: "Document not found.",
       };
     }
     await File.deleteOne({ _id: document._id });
+    const files = await File.find({ userId: userId, folderName: folder_name });
+    if (!files) {
+      return {
+        status: true,
+        message: "Document deleted but no files do display.",
+      };
+    }
+
+    const transformedFiles = files.map(file => {
+      const extension = file.fileName.split('.').pop().toLowerCase();
+      
+      return {
+        _id: file._id,
+        userId: file.userId,
+        fileName: file.fileName,
+        folderName: file.folderName,
+        fileUrl: file.fileUrl,
+        extension: extension
+      };
+    });
+
     return {
-      status: 200,
-      message: "Document deleted successfully.",
+      status: true,
+      message: "Documents deleted successfully.",
+      data: transformedFiles,
     };
   } catch (error) {
     console.error("Error deleting document:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while deleting the document.",
     };
   }

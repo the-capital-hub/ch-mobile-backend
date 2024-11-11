@@ -77,11 +77,11 @@ export const uploadDocumentController = async (req, res) => {
 
 export const getDocumentByUserController = async (req, res) => {
   try {
-    const response = await getDocumentByUser(req.body);
-    res.status(response.status).send(response);
+    const response = await getDocumentByUser(req.userId, req.body.folder_name);
+    res.send(response);
   } catch (error) {
     console.error(error);
-    res.status(false).send({
+    res.send({
       status: false,
       message: "An error occurred while getting documents.",
     });
@@ -116,12 +116,13 @@ export const deleteFolderController = async (req, res) => {
 
 export const deleteDocumentController = async (req, res) => {
   try {
-    const documentId = req.params.id;
-    const response = await deleteDocument(documentId);
-    res.status(response.status).send(response);
+    const {documentId, folder_name} = req.body;
+    const userId = req.userId;
+    const response = await deleteDocument(documentId, userId, folder_name);
+    res.send(response);
   } catch (error) {
     console.error(error);
-    res.status(false).send({
+    res.send({
       status: false,
       message: "An error occurred while deleting document.",
     });
