@@ -86,47 +86,54 @@ export const getFolderByUser = async (oneLinkId) => {
 
 export const uploadDocument = async (file, userId, folderName) => {
   try {
-     //make file ready to upload
-     const fileBuffer = await fs.readFile(file.path);
-     const timestamp = Date.now();
-     const fileName = `${timestamp}_${file.originalname}`;
+    // Convert base64 to buffer
+    const fileBuffer = Buffer.from(file.base64Data, 'base64');
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.originalname}`;
 
-     const fileObject = {
+    const fileObject = {
       buffer: fileBuffer,
-      mimeType: file.mimetype,
+      mimeType: getMimeType(file.originalname), 
       originalname: file.originalname,
     };
 
     const driveResponse = await uploadFileToDrive(fileObject, fileName);
 
-
-     // Check if driveResponse contains webViewLink
     if (!driveResponse.webViewLink) {
       throw new Error("Google Drive response does not contain webViewLink");
     }
- 
-     const newFile = new FileModel({
-       userId: userId,
-       fileName: fileName,
-       folderName: folderName,
-       fileUrl: driveResponse.webViewLink,
-     });
- 
-     await newFile.save();
+
+    const newFile = new FileModel({
+      userId: userId,
+      fileName: fileName,
+      folderName: folderName,
+      fileUrl: driveResponse.webViewLink,
+    });
+
+    await newFile.save();
 
     return {
-      status: 200,
-      message: "File uploaded successfully",
-      file: newFile,
+      fileName: file.originalname,
+      fileUrl: driveResponse.webViewLink
     };
   } catch (error) {
     console.error("Error uploading document:", error);
-    throw new Error("Error uploading document");
+    throw new Error(`Error uploading document ${file.originalname}`);
   }
 };
 
-
-
+// Helper function to determine MIME type based on file extension
+const getMimeType = (filename) => {
+  const ext = filename.split('.').pop().toLowerCase();
+  const mimeTypes = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'pdf': 'application/pdf',
+    // Add more as needed
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+};
 
 export const getDocumentByUser = async (args) => {
   try {

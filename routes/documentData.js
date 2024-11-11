@@ -9,21 +9,12 @@ import {
   renameFolderController,
   deleteDocumentController,
 } from "../controllers/documentDataController.js";
-// import upload from "../utils/file.helper.js"
-import multer from "multer";
+import { authenticateToken } from "../middlewares/authenticateToken.js";
+
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: "./uploads",
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  },
-});
-
-const upload = multer({ storage });
-
 router.get("/getDocument", getDocumentList);
-router.post("/uploadDocument", upload.single("file") , uploadDocumentController);
+router.post("/uploadDocument", authenticateToken, uploadDocumentController);
 router.post("/getDocumentsByUser", getDocumentByUserController);
 router.post("/createFolder", createFolderController);
 router.get("/getFolderByUser/:oneLinkId", getFolderByUserController);
