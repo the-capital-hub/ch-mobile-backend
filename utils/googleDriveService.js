@@ -4,6 +4,7 @@ import stream from 'stream';
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import path from "path";
+import { Readable } from 'stream';
 
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
