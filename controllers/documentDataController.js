@@ -61,11 +61,7 @@ export const uploadDocumentController = async (req, res) => {
 
     const responses = await Promise.all(uploadPromises);
     
-    res.send({
-      status: true,
-      message: "Files uploaded successfully",
-      files: responses
-    });
+    res.send(responses);
   } catch (error) {
     console.error(error);
     res.send({

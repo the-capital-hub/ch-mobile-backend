@@ -51,41 +51,44 @@ const setFilePermissions = async (fileId) => {
 
 export const uploadFileToDrive = async (fileObject, fileName) => {
   try {
-    console.log(fileName)
-    // Log fileObject to debug its contents
-    console.log('fileObject:', fileObject);
+    const { drive } = await getDriveInstance();
 
-    // Ensure buffer is not empty
-    if (!fileObject.buffer || fileObject.buffer.length === 0) {
-      throw new Error("File buffer is empty");
-    }
+    // Create file metadata
+    const fileMetadata = {
+      name: fileName,
+      parents: [GOOGLE_DRIVE_FOLDER_ID] // If you're using a specific folder
+    };
 
-    //uploading to Gdrive starts
-    const bufferStream = new stream.PassThrough();
-    bufferStream.end(fileObject.buffer);
-    
-    const { data } = await drive.files.create({
-        media: {
-            mimeType: fileObject.mimeType,
-            body: bufferStream,
-        },
-        requestBody: {
-            name: fileName,
-            parents: ["113H-8prXNGpCoibH-Mf6j5C6XB6avfEr"],
-        },
-        fields: "id,name,webViewLink",
+    // Create media object directly from buffer
+    const media = {
+      mimeType: fileObject.mimeType,
+      body: Readable.from(fileObject.buffer)
+    };
+
+    // Upload file
+    const file = await drive.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: 'id,webViewLink'
     });
 
-    console.log(`Uploaded file ${data.name} ${data.id}`);
+    // Set file permissions to anyone with the link can view
+    await drive.permissions.create({
+      fileId: file.data.id,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone'
+      }
+    });
 
-    await setFilePermissions(data.id);
-    const filePath = path.join("uploads", fileObject.originalname);
-    await fs.unlink(filePath);
-    console.log(`File ${filePath} deleted from the upload folder`);
-    return data; // Return the response data
+    console.log(`Permissions set to anyone with the link for file ID: ${file.data.id}`);
 
+    return {
+      fileId: file.data.id,
+      webViewLink: file.data.webViewLink
+    };
   } catch (error) {
-    console.error("Error uploading file to Google Drive:", error);
+    console.error('Error uploading file to Google Drive:', error);
     throw error;
   }
 };
