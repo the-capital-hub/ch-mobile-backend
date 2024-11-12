@@ -97,12 +97,14 @@ export const uploadDocument = async (file, userId, folderName) => {
       originalname: file.originalname,
     };
 
+    // Upload to Google Drive
     const driveResponse = await uploadFileToDrive(fileObject, fileName);
 
     if (!driveResponse.webViewLink) {
       throw new Error("Google Drive response does not contain webViewLink");
     }
 
+    // Save file metadata to database
     const newFile = new FileModel({
       userId: userId,
       fileName: fileName,
@@ -113,12 +115,17 @@ export const uploadDocument = async (file, userId, folderName) => {
     await newFile.save();
 
     return {
+      status: true,
       fileName: file.originalname,
       fileUrl: driveResponse.webViewLink
     };
   } catch (error) {
     console.error("Error uploading document:", error);
-    throw new Error(`Error uploading document ${file.originalname}`);
+    return {
+      status: false,
+      message: `Error uploading document ${file.originalname}`,
+      error: error.message
+    };
   }
 };
 
