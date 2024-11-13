@@ -60,8 +60,11 @@ export const uploadDocumentController = async (req, res) => {
     );
 
     const responses = await Promise.all(uploadPromises);
+
+    const finalResponse = responses[responses.length - 1];
     
-    res.send(responses);
+    res.send(finalResponse);
+    
   } catch (error) {
     console.error(error);
     res.send({
