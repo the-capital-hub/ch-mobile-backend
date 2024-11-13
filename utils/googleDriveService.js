@@ -50,23 +50,22 @@ const setFilePermissions = async (fileId) => {
   }
 };
 
+// Add this constant near the top with other constants
+const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
+
 export const uploadFileToDrive = async (fileObject, fileName) => {
   try {
-    const { drive } = await getDriveInstance();
-
-    // Create file metadata
+    // Use the existing drive instance instead of getting a new one
     const fileMetadata = {
       name: fileName,
-      parents: [GOOGLE_DRIVE_FOLDER_ID] // If you're using a specific folder
+      parents: [GOOGLE_DRIVE_FOLDER_ID]
     };
 
-    // Create media object directly from buffer
     const media = {
       mimeType: fileObject.mimeType,
       body: Readable.from(fileObject.buffer)
     };
 
-    // Upload file
     const file = await drive.files.create({
       resource: fileMetadata,
       media: media,
