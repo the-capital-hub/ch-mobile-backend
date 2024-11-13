@@ -43,7 +43,7 @@ export const getFolderByUserController = async (req, res) => {
 export const uploadDocumentController = async (req, res) => {
   try {
     const { folder_name, files } = req.body;
-    const userId = req.userId; // Getting userId from authenticated request
+    const userId = req.userId; 
 
     if (!files || !Array.isArray(files) || files.length === 0) {
       return res.send({

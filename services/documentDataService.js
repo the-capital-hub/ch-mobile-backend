@@ -114,11 +114,24 @@ export const uploadDocument = async (file, userId, folderName) => {
 
     await newFile.save();
 
+    const files = await File.find({ userId: userId, folderName: folderName });
+    
+    // Transform files only if they exist
+    const transformedFiles = files?.map(file => ({
+      _id: file._id,
+      userId: file.userId,
+      fileName: file.fileName,
+      folderName: file.folderName,
+      fileUrl: file.fileUrl,
+      extension: file.fileName.split('.').pop().toLowerCase()
+    }));
+
     return {
       status: true,
-      fileName: file.originalname,
-      fileUrl: driveResponse.webViewLink
+      message: "Files Uploaded successfully",
+      data: transformedFiles
     };
+
   } catch (error) {
     console.error("Error uploading document:", error);
     return {
