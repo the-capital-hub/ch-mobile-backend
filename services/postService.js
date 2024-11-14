@@ -212,7 +212,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       .skip(skip)
       .limit(perPage);
 
-    const posts = allPosts.map(({ _id, postType, description = "", image = "", likes, comments, createdAt, user }) => {
+    const posts = allPosts.map(({ _id, postType, description = "", image = "", images = [], likes, comments, createdAt, user }) => {
       const { 
         _id: userId, 
         firstName: userFirstName, 
@@ -225,9 +225,11 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       } = user || {};
 
       const isLiked = likes.some(like => like._id == userIdd);
-      const isMyPost = userId == userIdd
-            const isSaved = savedPostIds.includes(_id.toString());
+      const isMyPost = userId == userIdd;
+      const isSaved = savedPostIds.includes(_id.toString());
 
+      // Combine image and images into a single array
+      const combinedImages = image ? [image, ...images] : images;
 
       return {
         postId: _id,
@@ -236,7 +238,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         description,
         isSaved,
         isLiked,
-        image,
+        image: combinedImages, // Now returns an array containing both image and images
         likes,
         comments: comments.map(comment => ({
           _id: comment._id,

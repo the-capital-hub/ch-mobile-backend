@@ -83,7 +83,8 @@ export const getAllPostsPublic = async (req, res) => {
     const postsPerPage = parseInt(perPage) || 10; 
     const data = await allPostsDataPublic(user ,pageNumber, postsPerPage);
     if (!data.length) {
-      res.status(404).send({
+      res.send({
+        status:false,
         message: "No Posts yet",
       });
     } else {
@@ -91,7 +92,7 @@ export const getAllPostsPublic = async (req, res) => {
     }
   } catch (err) {
     console.log(err);
-    res.status(500).send({status: false, message:err, data:{}});
+    res.send({status: false, message:err, data:{}});
   }
 };
 
@@ -394,7 +395,7 @@ export const getPost = async (req,res) =>{
     const response = await getPostById(req.body.postId)
     return res.status(response.status).json(response.data)
   } catch (error){
-    return res.status(500).json({
+    return res.json({
       status:false,
      message: "An error occurred while liking the comment.",
     })
