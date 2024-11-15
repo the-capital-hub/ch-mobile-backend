@@ -23,6 +23,7 @@ import {
   userPost,
   getPostById,
   allPostsDataPublic,
+  voteForPoll,
 } from "../services/postService.js";
 import { UserModel } from "../models/User.js";
 
@@ -398,6 +399,20 @@ export const getPost = async (req,res) =>{
     return res.json({
       status:false,
      message: "An error occurred while liking the comment.",
+    })
+  }
+}
+
+export const voteForPollController = async(req,res)=>{
+  try{
+    const {postId, optionId} = req.body;
+    const response = await voteForPoll(postId, optionId, req.userId)
+    return res.json(response);
+  }catch (error){
+    console.log(error);
+    return res.json({
+      status:false,
+     message: error,
     })
   }
 }

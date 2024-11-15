@@ -80,6 +80,23 @@ export const createNewPost = async (data) => {
         data.resharedPostId
       ).populate("user");
     }
+
+    if (data.pollOptions) {
+			// Ensure pollOptions is an array
+			const optionsArray = Array.isArray(data.pollOptions) 
+				? data.pollOptions 
+				: Object.values(data.pollOptions);
+
+			// Create poll options objects from the provided data
+			const newPollOptions = optionsArray.map(optionText => ({
+				option: optionText,
+				votes: []  
+			}));
+
+			data.pollOptions = newPollOptions;
+		 }
+
+
     const newPost = new PostModel(data);
     const post = await newPost.save();
 
@@ -88,9 +105,16 @@ export const createNewPost = async (data) => {
       user.companyUpdate.push(post._id);
       await user.save();
     }
-    await newPost.populate("user");
-    await newPost.user.populate("startUp");
-    await newPost.user.populate("investor");
+   await newPost.populate([
+			{
+				path: "user",
+				populate: ["startUp", "investor"]
+			},
+			{
+				path: "pollOptions",
+				select: "option votes"
+			}
+		]);
     return newPost;
   } catch (error) {
     console.error(error);
@@ -212,7 +236,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       .skip(skip)
       .limit(perPage);
 
-    const posts = allPosts.map(({ _id, postType, description = "", image = "", images = [], likes, comments, createdAt, user }) => {
+    const posts = allPosts.map(({ _id, postType, description = "", image = "", images = [], pollOptions, likes, comments, createdAt, user }) => {
       const { 
         _id: userId, 
         firstName: userFirstName, 
@@ -231,6 +255,22 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       // Combine image and images into a single array
       const combinedImages = image ? [image, ...images] : images;
 
+      // Calculate total votes across all options
+      const totalVotes = pollOptions?.reduce((sum, option) => sum + option.votes.length, 0) || 0;
+
+      // Curate poll options
+      const curatedPollOptions = pollOptions?.map(option => ({
+        _id: option._id,
+        option: option.option,
+        numberOfVotes: option.votes.length,
+        hasVoted: option.votes.includes(userIdd)
+      }));
+
+      // Get array of optionIds voted by current user
+      const myVotes = pollOptions
+        ?.filter(option => option.votes.includes(userIdd))
+        .map(option => option._id) || [];
+
       return {
         postId: _id,
         postType,
@@ -239,6 +279,9 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         isSaved,
         isLiked,
         image: combinedImages, // Now returns an array containing both image and images
+        pollOptions: curatedPollOptions,
+        myVotes,
+        totalVotes,
         likes,
         comments: comments.map(comment => ({
           _id: comment._id,
@@ -1049,4 +1092,68 @@ export const getPostById = async (postId) => {
       message:"An error occurred while toggling the comment like status.",
     }
   }
+}
+
+
+export const voteForPoll = async(postId, optionId, userId) => {
+	try {
+		const post = await PostModel.findById(postId);
+		
+		if (!post) {
+			return {
+				status: false,
+				message: "Post Not Found"
+			}
+		}
+
+		const option = post.pollOptions.id(optionId);
+		
+		if (!option) {
+			return {
+				status: false,
+				message: "Option Not Found"
+			}
+		}
+
+		// Check if user has already voted
+		const voteIndex = option.votes.indexOf(userId);
+		const hasVoted = voteIndex !== -1;
+
+		if (hasVoted) {
+			// Remove vote
+			option.votes.splice(voteIndex, 1);
+		} else {
+			// Add vote
+			option.votes.push(userId);
+		}
+
+		// Save the updated post
+		
+		// Calculate total votes and format poll options
+		const totalVotes = post.pollOptions.reduce((sum, opt) => sum + opt.votes.length, 0);
+		const formattedPollOptions = post.pollOptions.map(opt => ({
+			_id: opt._id,
+			option: opt.option,
+			numberOfVotes: opt.votes.length,
+			hasVoted: opt.votes.includes(userId)
+		}));
+
+		return {
+			status: true,
+			message: hasVoted ? "Vote removed successfully" : "Vote added successfully",
+			data: {
+				pollOptions: formattedPollOptions,
+				totalVotes,
+				myVotes: post.pollOptions
+					.filter(opt => opt.votes.includes(userId))
+					.map(opt => opt._id)
+			}
+		}
+	} catch (error) {
+		console.error("Error voting for poll:", error);
+		return {
+			status: false,
+			message: "An error occurred while voting for poll"
+		}
+	}
 }

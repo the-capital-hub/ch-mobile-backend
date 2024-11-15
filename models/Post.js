@@ -20,6 +20,16 @@ const commentSchema = new Schema(
   }
 );
 
+const pollOptionsSchema = new Schema({
+  option:{
+    type:String
+  },
+  votes:[{
+    type: Schema.Types.ObjectId,
+    ref: "Users"
+  }]
+})
+
 const postSchema = new Schema(
   {
     category: {
@@ -55,7 +65,8 @@ const postSchema = new Schema(
     },
     postType:{
       type:String
-    }
+    },
+    pollOptions: [pollOptionsSchema],
   },
   {
     timestamps: true,
