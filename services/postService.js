@@ -1128,6 +1128,7 @@ export const voteForPoll = async(postId, optionId, userId) => {
 		}
 
 		// Save the updated post
+    await post.save();
 		
 		// Calculate total votes and format poll options
 		const totalVotes = post.pollOptions.reduce((sum, opt) => sum + opt.votes.length, 0);
