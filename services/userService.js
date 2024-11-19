@@ -9,6 +9,9 @@ import { sendMail } from "../utils/mailHelper.js";
 import bcrypt from "bcrypt";
 import { comparePassword, hashPassword } from "../utils/passwordManager.js";
 import { VCModel } from "../models/VC.js"
+import { getUserPost } from "../controllers/postController.js";
+import { userPost } from "./postService.js";
+import { getDocumentByUser } from '../services/documentDataService.js';
 
 const adminMail = "learn.capitalhub@gmail.com";
 
@@ -18,6 +21,23 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', options);
 };
 
+const userRequiredFields = [
+  "bio", "designation", "education", "experience", "startUp"
+];
+
+const companyRequiredFields = [
+  "SOM", "TAM", "colorCard", "company", "description", "fundingsAsk",
+  "lastFunding", "location", "mission", "noOfEmployees", "productStage",
+  "sector", "socialLinks", "stage", "startedAtDate", "tagline", "team", "vision"
+];
+
+const calculateProfileCompletion = (user, requiredFields) => {
+  if (!user || !requiredFields) return 0;
+  const filledFields = requiredFields.filter(
+    (field) => user[field] && user[field].length !== 0
+  );
+  return (filledFields.length / requiredFields.length) * 100;
+};
 
 export const getUsersService = async (info) => {
   try {
@@ -106,9 +126,9 @@ export const loginUserService = async ({ phoneNumber, password }) => {
 //get User by id
 export const getUserById = async (userId) => {
   try {
-    let user = await UserModel.findOne({ oneLinkId: userId }).populate('startUp investor');
+    let user = await UserModel.findOne({ oneLinkId: userId }).populate('startUp investor connections');
     if (!user) {
-      user = await UserModel.findById(userId).populate(['startUp', 'investor']);
+      user = await UserModel.findById(userId).populate(['startUp', 'investor', 'connections']);
     }
     if (!user) {
       return {
@@ -118,6 +138,69 @@ export const getUserById = async (userId) => {
     }
     user.password = undefined;
 
+    // Calculate document completion
+    let documentsCount = 0;
+      try {
+        const pdfDataLegal = await getDocumentByUser(userId, "legal and compliance");
+        const pdfDataKyc = await getDocumentByUser(userId, "kycdetails");
+        const pdfDataBusiness = await getDocumentByUser(userId, "business");
+        const pdfDataPitch = await getDocumentByUser(userId, "pitchdeck");
+        
+        documentsCount = 
+          (pdfDataLegal?.data?.length || 0) + 
+          (pdfDataKyc?.data?.length || 0) + 
+          (pdfDataBusiness?.data?.length || 0) + 
+          (pdfDataPitch?.data?.length || 0);
+
+      } catch (error) {
+        console.error("Error fetching PDF data:", error);
+        documentsCount = 0;
+      }
+
+
+    // Get posts count
+    let postsCount = 0;
+    try {
+      const posts = await userPost(userId);
+      postsCount = posts.allPosts.length;
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+
+    // Calculate all milestones
+    const milestones = [
+      {
+        name: "Profile",
+        completion: Math.round(calculateProfileCompletion(user, userRequiredFields)),
+        description: "Your Profile is successfully created, please complete the remaining profile",
+        image: "/Images/industryImage/CRM/image 79.png"
+      },
+      {
+        name: "Company",
+        completion: Math.round(calculateProfileCompletion(user.startUp, companyRequiredFields)),
+        description: "Company Profile is successfully created, please complete the remaining details",
+        image: "/Images/industryImage/CRM/image 79-1.png"
+      },
+      {
+        name: "OneLink",
+        completion: user.startUp?.introductoryMessage || user.investor?.introductoryMessage ? 100 : 0,
+        description: "Fill all details to complete Onelink profile.",
+        image: "/Images/industryImage/CRM/image 79-3.png"
+      },
+      {
+        name: "Documents",
+        completion: Math.round(documentsCount <= 4 ? (documentsCount / 4) * 100 : 100),
+        description: "Upload your business related documents to get your Onelink profile ready to share",
+        image: "/Images/industryImage/CRM/image 79-2.png"
+      },
+      {
+        name: "Posts",
+        completion: postsCount > 0 ? 100 : 0,
+        description: "Hola! Create your first post to share your experience with Capital Hub.",
+        image: "/Images/industryImage/CRM/image 79-1.png"
+      }
+    ];
+
     const userProfile = {
       profilePicture: user.profilePicture,
       firstName: user.firstName,
@@ -126,17 +209,97 @@ export const getUserById = async (userId) => {
       designation: user.designation,
       companyName: user.startUp?.company || user.investor?.companyName, 
       location: user.startUp?.location || user.investor?.location, 
-      bio: user.bio,
+      bio: user.bio || "",
       education: user.education,
       experience: user.experience,
       connectionsCount: user.connections.length,
       followersCount: user.connectionsReceived.length,
-      isSubscribed: user.isSubscribed
+      isSubscribed: user.isSubscribed,
+      recentConnections: user.connections?.length 
+        ? user.connections
+            .sort((a, b) => b.createdAt - a.createdAt)
+            .slice(0, 4)
+            .map(connection => ({
+              firstName: connection.firstName,
+              lastName: connection.lastName,
+              profilePicture: connection.profilePicture,
+              designation: connection.designation
+            }))
+        : [],
+      milestones
     };
 
-    return {
-...userProfile,
-    };
+    // Add profile specific fields based on user type
+    if (user.startUp) {
+      const socialLinks = [];
+      if (user.startUp.socialLinks.website) {
+        socialLinks.push({ name: 'website', link: user.startUp.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+      }
+      if (user.startUp.socialLinks.linkedin) {
+        socialLinks.push({ name: 'linkedin', link: user.startUp.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+      }
+      if (user.startUp.socialLinks.instagram) {
+        socialLinks.push({ name: 'instagram', link: user.startUp.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+      }
+      if (user.startUp.socialLinks.twitter) {
+        socialLinks.push({ name: 'twitter', link: user.startUp.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+      }
+      if (user.startUp.socialLinks.facebook) {
+        socialLinks.push({ name: 'facebook', link: user.startUp.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+      }
+      if (user.startUp.contactDetails?.email) {
+        socialLinks.push({ name: 'email', link: user.startUp.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+      }
+
+      userProfile.companyData = {
+        companyName: user.startUp.company,
+        location: user.startUp.location,
+        logo: user.startUp.logo,
+        description: user.startUp.description,
+        sector: user.startUp.sector,
+        industry: user.startUp.industryType,
+        startedAtDate: formatDate(user.startUp.startedAtDate),
+        socialLinks,  // Use the new formatted socialLinks
+        stage: user.startUp.stage,
+        age: formatDate(user.startUp.age),
+        lastFunding: formatDate(user.startUp.lastFunding)
+      };
+    } else if (user.investor) {
+      const socialLinks = [];
+      if (user.investor.socialLinks.website) {
+        socialLinks.push({ name: 'website', link: user.investor.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+      }
+      if (user.investor.socialLinks.linkedin) {
+        socialLinks.push({ name: 'linkedin', link: user.investor.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+      }
+      if (user.investor.socialLinks.instagram) {
+        socialLinks.push({ name: 'instagram', link: user.investor.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+      }
+      if (user.investor.socialLinks.twitter) {
+        socialLinks.push({ name: 'twitter', link: user.investor.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+      }
+      if (user.investor.socialLinks.facebook) {
+        socialLinks.push({ name: 'facebook', link: user.investor.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+      }
+      if (user.investor.contactDetails?.email) {
+        socialLinks.push({ name: 'email', link: user.investor.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+      }
+
+      userProfile.companyData = {
+        companyName: user.investor.companyName,
+        location: user.investor.location,
+        logo: user.investor.logo,
+        description: user.investor.description,
+        sector: user.investor.sector,
+        industry: user.investor.industry,
+        startedAtDate: formatDate(user.investor.startedAtDate),
+        socialLinks,  // Use the new formatted socialLinks
+        stage: user.investor.stage,
+        age: formatDate(user.investor.age)
+      };
+    }
+
+    return userProfile;
   } catch (error) {
     console.error("Error getting user:", error);
     return {
@@ -1251,5 +1414,80 @@ export const deleteExperience = async (userId, experienceId) => {
       status: 500,
       message: "An error occurred while deleting experience.",
     };
+  }
+};
+
+const formatRelativeTime = (dateString) => {
+  const now = new Date();
+  const past = new Date(dateString);
+  const diffInMillis = now - past;
+  const diffInDays = Math.floor(diffInMillis / (1000 * 60 * 60 * 24));
+  const diffInMonths = Math.floor(diffInDays / 30);
+  const diffInYears = Math.floor(diffInDays / 365);
+
+  if (diffInDays < 0) {
+    return "just now";
+  } else if (diffInDays < 1) {
+    return "today";
+  } else if (diffInDays === 1) {
+    return "1 day ago";
+  } else if (diffInDays < 30) {
+    return `${diffInDays} days ago`;
+  } else if (diffInMonths === 1) {
+    return "1 month ago";
+  } else if (diffInMonths < 12) {
+    return `${diffInMonths} months ago`;
+  } else if (diffInYears === 1) {
+    return "1 year ago";
+  } else {
+    return `${diffInYears} years ago`;
+  }
+};
+
+export const getProfilePosts = async (userId, type) => {
+  try {
+    const user = await UserModel.findById(userId).populate('featuredPosts savedPosts companyUpdate startUp investor');
+    const post = await userPost(userId);
+    
+    const curatePost = (posts) => {
+      return posts.map(post => {
+        // Merge image and images array
+        let images = [];
+        if (post.image) {
+          images.push(post.image);
+        }
+        if (post.images && Array.isArray(post.images)) {
+          images = [...images, ...post.images];
+        }
+
+        return {
+          userProfilePicture: user.profilePicture,
+          userDesignation: user.designation,
+          userFirstName: user.firstName,
+          userLastName: user.lastName,
+          userLocation: user.startUp ? user.startUp.location : user.investor ? user.investor.location : "",
+          postId: post._id,
+          description: post.description || "",
+          images: images,
+          age: formatRelativeTime(post.createdAt),
+        };
+      });
+    };
+
+    if (type === 'featured') {
+      return curatePost(user.featuredPosts || []);
+    }
+    else if (type === 'mypost') {
+      return curatePost(post.allPosts || []);
+    }
+    else if (type === 'company') {
+      return curatePost(user.companyUpdate || []);
+    }
+    else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error getting profile posts:", error);
+    return [];
   }
 };

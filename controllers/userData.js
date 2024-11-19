@@ -27,6 +27,7 @@ import {
   blockUser,
   getUserByIdBody,
   unblockUser,
+  getProfilePosts,
 } from "../services/userService.js";
 
 import { sendMail } from "../utils/mailHelper.js";
@@ -1074,5 +1075,16 @@ export const deleteExperienceController = async (req, res) => {
       status: 500,
       message: "An error occurred while deleting experience.",
     });
+  }
+};
+
+export const getProfilePostsController = async (req, res) => {
+  try {
+    const { type } = req.params;
+    const response = await getProfilePosts(req.userId, type);
+    res.send({status:true, message:"Profile posts fetched successfully", data:response});
+  } catch (error) {
+    console.error(error);
+    res.send({ status: false, message: "An error occurred while getting profile posts.", data: {} });
   }
 };

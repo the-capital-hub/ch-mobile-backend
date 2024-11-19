@@ -35,7 +35,8 @@ import {
   getUserByIdBodyController,
   getUsersByUserNameController,
   unblockUserController,
-  resendOtp
+  resendOtp,
+  getProfilePostsController
 } from "../controllers/userData.js";
 
 import { authenticateToken } from "../middlewares/authenticateToken.js";
@@ -113,5 +114,8 @@ router.post("/getUserByIdBody", getUserByIdBodyController);
 
 //create secret key
 router.post("/createSecretKey", createSecretKeyController);
+
+//get profile posts
+router.get("/getProfilePosts/:type", getProfilePostsController);
 
 export default router;
