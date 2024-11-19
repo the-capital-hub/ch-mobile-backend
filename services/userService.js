@@ -173,31 +173,31 @@ export const getUserById = async (userId) => {
         name: "Profile",
         completion: Math.round(calculateProfileCompletion(user, userRequiredFields)),
         description: "Your Profile is successfully created, please complete the remaining profile",
-        image: "/Images/industryImage/CRM/image 79.png"
+        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image+79.png"
       },
       {
         name: "Company",
         completion: Math.round(calculateProfileCompletion(user.startUp, companyRequiredFields)),
         description: "Company Profile is successfully created, please complete the remaining details",
-        image: "/Images/industryImage/CRM/image 79-1.png"
+        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
       },
       {
         name: "OneLink",
         completion: user.startUp?.introductoryMessage || user.investor?.introductoryMessage ? 100 : 0,
         description: "Fill all details to complete Onelink profile.",
-        image: "/Images/industryImage/CRM/image 79-3.png"
+        image: "/https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-3.png"
       },
       {
         name: "Documents",
         completion: Math.round(documentsCount <= 4 ? (documentsCount / 4) * 100 : 100),
         description: "Upload your business related documents to get your Onelink profile ready to share",
-        image: "/Images/industryImage/CRM/image 79-2.png"
+        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-2.png"
       },
       {
         name: "Posts",
         completion: postsCount > 0 ? 100 : 0,
         description: "Hola! Create your first post to share your experience with Capital Hub.",
-        image: "/Images/industryImage/CRM/image 79-1.png"
+        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
       }
     ];
 
