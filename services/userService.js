@@ -186,7 +186,7 @@ export const getUserById = async (userId) => {
       name: "OneLink",
       completion: user.startUp?.introductoryMessage || user.investor?.introductoryMessage ? 100 : 0,
       description: "Fill all details to complete Onelink profile.",
-      image: "/https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-3.png"
+      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-3.png"
     };
 
     const milestone_documents = {
