@@ -338,20 +338,22 @@ export const updateUserData = async ({ userId, newData }) => {
 
       newData.profilePicture = secure_url; 
     }
-    const data = await UserModel.findByIdAndUpdate(
+    await UserModel.findByIdAndUpdate(
       userId,
       { ...newData },
       { new: true }
     );
+    const data = await getUserById(userId);
+
     return {
-      status: 200,
+      status: true,
       message: "User updated succesfully",
       data,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while updating the bio.",
     };
   }
@@ -501,14 +503,14 @@ export const updateUserById = async (userId, newData) => {
   try {
     const data = await UserModel.findByIdAndUpdate(userId, { ...newData }, { new: true });
     return {
-      status: 200,
+      status: true,
       message: "User updated succesfully",
       data,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while updating the bio.",
     };
   }

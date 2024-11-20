@@ -793,9 +793,9 @@ export const updateUser = async (req, res) => {
       userId,
       newData,
     });
-    res.status(status).json({status:true, message, data });
+    res.json({status:true, message, data });
   } catch (error) {
-    res.status(500).json({status:false, error, data:{} });
+    res.json({status:false, error, data:{} });
   }
 };
 
@@ -803,7 +803,7 @@ export const updateUserByIdController = async (req, res) => {
   try {
     const { userId } = req.params;
     const { status, message, data } = await updateUserById(userId, req.body);
-    res.status(status).json({ message, data });
+    res.json({status, message, data });
   } catch (error) {}
 };
 

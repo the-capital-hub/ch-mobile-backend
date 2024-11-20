@@ -266,10 +266,10 @@ export const deletedPostController = async (req, res) => {
     const { postId } = req.params;
     const userId = req.userId;
     const result = await deletePost(postId, userId);
-    return res.json({status: true, ...result});
+    return res.json(result);
   } catch (error) {
     console.log(error);
-    return res.status(500).send({
+    return res.send({
       status: false,
       message: "An error occurred while deleting posts.",
     });
@@ -337,11 +337,11 @@ export const removeCompanyUpdatePostController = async (req,res) => {
     const { postId } = req.params;
     const userId = req.userId;
     const result = await removeCompanyUpdatePost(postId, userId);
-    return res.status(result.status).json(result);
+    return res.json(result);
   } catch (error) {
     console.log(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while removing featured post.",
     });
   } 
@@ -351,11 +351,11 @@ export const removeFromFeaturedPostController = async (req, res) => {
     const { postId } = req.params;
     const userId = req.userId;
     const result = await removeFromFeaturedPost(postId, userId);
-    return res.status(result.status).json(result);
+    return res.json(result);
   } catch (error) {
     console.log(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while removing featured post.",
     });
   }
