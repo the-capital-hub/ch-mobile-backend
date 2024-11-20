@@ -168,38 +168,40 @@ export const getUserById = async (userId) => {
     }
 
     // Calculate all milestones
-    const milestones = [
-      {
-        name: "Profile",
-        completion: Math.round(calculateProfileCompletion(user, userRequiredFields)),
-        description: "Your Profile is successfully created, please complete the remaining profile",
-        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image+79.png"
-      },
-      {
-        name: "Company",
-        completion: Math.round(calculateProfileCompletion(user.startUp, companyRequiredFields)),
-        description: "Company Profile is successfully created, please complete the remaining details",
-        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
-      },
-      {
-        name: "OneLink",
-        completion: user.startUp?.introductoryMessage || user.investor?.introductoryMessage ? 100 : 0,
-        description: "Fill all details to complete Onelink profile.",
-        image: "/https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-3.png"
-      },
-      {
-        name: "Documents",
-        completion: Math.round(documentsCount <= 4 ? (documentsCount / 4) * 100 : 100),
-        description: "Upload your business related documents to get your Onelink profile ready to share",
-        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-2.png"
-      },
-      {
-        name: "Posts",
-        completion: postsCount > 0 ? 100 : 0,
-        description: "Hola! Create your first post to share your experience with Capital Hub.",
-        image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
-      }
-    ];
+    const milestone_profile = {
+      name: "Profile",
+      completion: Math.round(calculateProfileCompletion(user, userRequiredFields)),
+      description: "Your Profile is successfully created, please complete the remaining profile",
+      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image+79.png"
+    };
+
+    const milestone_company = {
+      name: "Company",
+      completion: Math.round(calculateProfileCompletion(user.startUp, companyRequiredFields)),
+      description: "Company Profile is successfully created, please complete the remaining details",
+      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
+    };
+
+    const milestone_onelink = {
+      name: "OneLink",
+      completion: user.startUp?.introductoryMessage || user.investor?.introductoryMessage ? 100 : 0,
+      description: "Fill all details to complete Onelink profile.",
+      image: "/https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-3.png"
+    };
+
+    const milestone_documents = {
+      name: "Documents",
+      completion: Math.round(documentsCount <= 4 ? (documentsCount / 4) * 100 : 100),
+      description: "Upload your business related documents to get your Onelink profile ready to share",
+      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-2.png"
+    };
+
+    const milestone_posts = {
+      name: "Posts",
+      completion: postsCount > 0 ? 100 : 0,
+      description: "Hola! Create your first post to share your experience with Capital Hub.",
+      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
+    };
 
     const userProfile = {
       profilePicture: user.profilePicture,
@@ -226,7 +228,11 @@ export const getUserById = async (userId) => {
               designation: connection.designation
             }))
         : [],
-      milestones
+      milestone_profile,
+      milestone_company,
+      milestone_onelink,
+      milestone_documents,
+      milestone_posts
     };
 
     // Add profile specific fields based on user type
@@ -1460,6 +1466,22 @@ export const getProfilePosts = async (userId, type) => {
           images = [...images, ...post.images];
         }
 
+        // Calculate total votes and format poll options
+        const totalVotes = post.pollOptions?.reduce((sum, option) => sum + option.votes.length, 0) || 0;
+
+        // Curate poll options
+        const curatedPollOptions = post.pollOptions?.map(option => ({
+          _id: option._id,
+          option: option.option,
+          numberOfVotes: option.votes.length,
+          hasVoted: option.votes.includes(userId)
+        }));
+
+        // Get array of optionIds voted by current user
+        const myVotes = post.pollOptions
+          ?.filter(option => option.votes.includes(userId))
+          .map(option => option._id) || [];
+
         return {
           userProfilePicture: user.profilePicture,
           userDesignation: user.designation,
@@ -1470,6 +1492,10 @@ export const getProfilePosts = async (userId, type) => {
           description: post.description || "",
           images: images,
           age: formatRelativeTime(post.createdAt),
+          // Add poll-related fields
+          pollOptions: curatedPollOptions,
+          myVotes,
+          totalVotes
         };
       });
     };
