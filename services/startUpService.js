@@ -84,7 +84,7 @@ export const createStartup = async (startUpData, userId) => {
       };
 
       return {
-        status: 200,
+        status: true,
         message: "Startup Updated",
         data: curatedStartup,
       };
