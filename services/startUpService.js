@@ -14,7 +14,7 @@ const formatDate = (dateString) => {
 };
 
 
-export const createStartup = async (startUpData) => {
+export const createStartup = async (startUpData, userId) => {
   try {
     if (startUpData?.logo) {
       const { secure_url } = await cloudinary.uploader.upload(startUpData.logo, {
@@ -25,72 +25,144 @@ export const createStartup = async (startUpData) => {
       startUpData.logo = secure_url;
     }
     let existingCompany = await StartUpModel.findOne({
-      founderId: startUpData.founderId,
+      founderId: userId,
     });
+    
     if (existingCompany) {
       existingCompany.set({
         ...startUpData,
       });
       await existingCompany.save();
+      
+      // Create curated response
+      const socialLinks = [];
+      if (existingCompany.socialLinks?.website) {
+        socialLinks.push({ name: 'website', link: existingCompany.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+      }
+      if (existingCompany.socialLinks?.linkedin) {
+        socialLinks.push({ name: 'linkedin', link: existingCompany.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+      }
+      if (existingCompany.socialLinks?.instagram) {
+        socialLinks.push({ name: 'instagram', link: existingCompany.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+      }
+      if (existingCompany.socialLinks?.twitter) {
+        socialLinks.push({ name: 'twitter', link: existingCompany.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+      }
+      if (existingCompany.socialLinks?.facebook) {
+        socialLinks.push({ name: 'facebook', link: existingCompany.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+      }
+
+      const curatedStartup = {
+        startUpId: existingCompany._id,
+        name: existingCompany.company,
+        logo: existingCompany.logo || "",
+        tagline: existingCompany.tagline || "",
+        location: existingCompany.location || "",
+        foundingDate: formatDate(existingCompany.startedAtDate) || "NA",
+        lastFunding: formatDate(existingCompany.lastFunding) || "NA",
+        stage: existingCompany.stage || "",
+        sector: existingCompany.sector || "",
+        description: existingCompany.description || "",
+        numberOfEmployees: existingCompany.noOfEmployees || "NA",
+        vision: existingCompany.vision || "",
+        mission: existingCompany.mission || "",
+        TAM: existingCompany.TAM || "NA",
+        SOM: existingCompany.SOM || "NA",
+        SAM: existingCompany.SAM || "NA",
+        lastRoundInvestment: existingCompany.colorCard?.last_round_investment || "NA",
+        totalInvestment: existingCompany.colorCard?.total_investment || "NA",
+        noOfInvesters: existingCompany.colorCard?.no_of_investers || "NA",
+        fundAsk: existingCompany.colorCard?.fund_ask || "NA",
+        valuation: existingCompany.colorCard?.valuation || "NA",
+        raisedFunds: existingCompany.colorCard?.raised_funds || "NA",
+        lastYearRevenue: existingCompany.colorCard?.last_year_revenue || "NA",
+        target: existingCompany.colorCard?.target || "NA",
+        socialLinks: socialLinks,
+        keyFocus: existingCompany.keyFocus ? existingCompany.keyFocus.split(',') : [],
+        team: existingCompany.team,
+        isOwnCompany: true,
+      };
+
       return {
         status: 200,
         message: "Startup Updated",
-        data: existingCompany,
+        data: curatedStartup,
       };
     }
+
+    // Create new startup
     let oneLink = startUpData.company.split(" ").join("").toLowerCase();
     const isOneLinkExists = await StartUpModel.countDocuments({ oneLink: oneLink });
     const newStartUp = new StartUpModel({
       ...startUpData,
       oneLink: isOneLinkExists === 1 ? oneLink + isOneLinkExists + 1 : oneLink,
+      founderId: userId,
     });
 
     await newStartUp.save();
-    const { founderId } = newStartUp;
-    const user = await UserModel.findByIdAndUpdate(founderId, {
+    await UserModel.findByIdAndUpdate(userId, {
       startUp: newStartUp._id,
-      gender: startUpData.gender,
     });
-    // const emailMessage = `
-    //     A new user has requested for an account:
-        
-    //     User Details:
-    //     User ID: ${user._id}
-    //     Name: ${user.firstName} ${user.lastName}
-    //     Email: ${user.email}
-    //     Mobile: ${user.phoneNumber}
 
-    //     Startup Details:
-    //     Company Name: ${newStartUp.company}
-    //     Sector: ${newStartUp.sector}
-    //     Funding Ask: ${newStartUp.fundingAsk}
-    //     Previous Funding: ${newStartUp.preFundingAsk}
-    //     Number of Funding Rounds: ${newStartUp.numberOfFundingRounds}
-    //   `;
-    // const subject = "New Account Request";
-    // const response = await sendMail(
-    //   user.firstName,
-    //   adminMail,
-    //   user.email,
-    //   subject,
-    //   emailMessage
-    // )
-    // if (response.status === 200) {
-      return {
-        status: 200,
-        message: "Startup Added",
-        data: newStartUp,
-      };
-    // } else {
-    //   return {
-    //     status: 500,
-    //     message: "Error while sending mail",
-    //   };
-    // }
+    // Create curated response for new startup
+    const socialLinks = [];
+    if (newStartUp.socialLinks?.website) {
+      socialLinks.push({ name: 'website', link: newStartUp.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+    }
+    if (newStartUp.socialLinks?.linkedin) {
+      socialLinks.push({ name: 'linkedin', link: newStartUp.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+    }
+    if (newStartUp.socialLinks?.instagram) {
+      socialLinks.push({ name: 'instagram', link: newStartUp.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+    }
+    if (newStartUp.socialLinks?.twitter) {
+      socialLinks.push({ name: 'twitter', link: newStartUp.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+    }
+    if (newStartUp.socialLinks?.facebook) {
+      socialLinks.push({ name: 'facebook', link: newStartUp.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+    }
+
+    const curatedStartup = {
+      startUpId: newStartUp._id,
+      name: newStartUp.company,
+      logo: newStartUp.logo || "",
+      tagline: newStartUp.tagline || "",
+      location: newStartUp.location || "",
+      foundingDate: formatDate(newStartUp.startedAtDate) || "NA",
+      lastFunding: formatDate(newStartUp.lastFunding) || "NA",
+      stage: newStartUp.stage || "",
+      sector: newStartUp.sector || "",
+      description: newStartUp.description || "",
+      numberOfEmployees: newStartUp.noOfEmployees || "NA",
+      vision: newStartUp.vision || "",
+      mission: newStartUp.mission || "",
+      TAM: newStartUp.TAM || "NA",
+      SOM: newStartUp.SOM || "NA",
+      SAM: newStartUp.SAM || "NA",
+      lastRoundInvestment: newStartUp.colorCard?.last_round_investment || "NA",
+      totalInvestment: newStartUp.colorCard?.total_investment || "NA",
+      noOfInvesters: newStartUp.colorCard?.no_of_investers || "NA",
+      fundAsk: newStartUp.colorCard?.fund_ask || "NA",
+      valuation: newStartUp.colorCard?.valuation || "NA",
+      raisedFunds: newStartUp.colorCard?.raised_funds || "NA",
+      lastYearRevenue: newStartUp.colorCard?.last_year_revenue || "NA",
+      target: newStartUp.colorCard?.target || "NA",
+      socialLinks: socialLinks,
+      keyFocus: newStartUp.keyFocus ? newStartUp.keyFocus.split(',') : [],
+      team: newStartUp.team,
+      isOwnCompany: true,
+    };
+
+    return {
+      status: true,
+      message: "Startup Added",
+      data: curatedStartup,
+    };
+
   } catch (error) {
     console.error("Error creating company:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while creating the company.",
     };
   }

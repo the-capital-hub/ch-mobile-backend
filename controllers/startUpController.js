@@ -20,13 +20,13 @@ import { getStartUpData } from "../services/userService.js";
 //create startup
 export const createStartUpController = async (req, res) => {
   try {
-    const response = await createStartup(req.body);
-    res.status(response.status).send(response);
+    const response = await createStartup(req.body, req.userId);
+    res.send(response);
     return response
   } catch (error) {
     console.error(error);
-    res.status(500).send({
-      status: 500,
+    res.send({
+      status: false,
       message: "An error occurred while creating the company.",
     });
   }

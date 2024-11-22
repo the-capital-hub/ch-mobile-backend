@@ -23,7 +23,7 @@ import { authenticateToken } from "../middlewares/authenticateToken.js";
 const router = express.Router();
 
 // Create a new startUp
-router.post("/createStartup", createStartUpController);
+router.post("/createStartup", authenticateToken, createStartUpController);
 
 // Phase 2
 // OneLink Page Data
