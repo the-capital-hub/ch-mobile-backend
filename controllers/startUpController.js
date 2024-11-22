@@ -22,7 +22,6 @@ export const createStartUpController = async (req, res) => {
   try {
     const response = await createStartup(req.body, req.userId);
     res.send(response);
-    return response
   } catch (error) {
     console.error(error);
     res.send({
