@@ -13,11 +13,18 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', options);
 };
 
+const base64ToBuffer = (base64String) => {
+  const base64Data = base64String.replace(/^data:image\/jpg;base64,/, '');
+  return Buffer.from(base64Data, 'base64');
+};
 
 export const createStartup = async (startUpData, userId) => {
   try {
     if (startUpData?.logo) {
-      const { secure_url } = await cloudinary.uploader.upload(startUpData.logo, {
+      const startUpLogoBuffer = base64ToBuffer(startUpData.logo);
+      const logoBase64 = `data:image/webp;base64,${startUpLogoBuffer.toString('base64')}`;
+
+      const { secure_url } = await cloudinary.uploader.upload(logoBase64, {
         folder: `${process.env.CLOUDIANRY_FOLDER}/users/profilePictures`,
         format: "webp",
         unique_filename: true,
