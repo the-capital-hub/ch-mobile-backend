@@ -575,9 +575,11 @@ export const getAllSavedPostCollections = async (userId) => {
       };
     }
     const collections = user.savedPosts;
+    const collectionNames = ["my saved posts", ...collections.map(c => c.name)];
+
     return {
       message: "Saved post collections retrieved successfully",
-      data: collections,
+      data:  collectionNames,
     };
   } catch (error) {
     console.error(error);
@@ -588,9 +590,9 @@ export const getAllSavedPostCollections = async (userId) => {
 };
 
 //get saved post by collection name
-export const getSavedPostsByCollection = async (userId, collectionName) => {
+export const getSavedPostsByCollection = async (userIdd, collectionName) => {
   try {
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findById(userIdd);
     if (!user) {
       return {
         status: false,
@@ -622,8 +624,8 @@ export const getSavedPostsByCollection = async (userId, collectionName) => {
         path: "user",
         select: "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed",
         populate: [
-          { path: "investor", select: "companyName" },
-          { path: "startUp", select: "company" },
+          { path: "investor", select: "companyName location" },
+          { path: "startUp", select: "company location" },
         ],
       })
       .populate({
@@ -652,56 +654,55 @@ export const getSavedPostsByCollection = async (userId, collectionName) => {
       .sort({ _id: -1 })
       .exec();
 
-    const posts = savedPosts.map(({ _id, postType, description = "", image = "", likes, comments, createdAt, user, resharedPostId }) => {
-      const { 
-        _id: userId, 
-        firstName: userFirstName, 
-        lastName: userLastName, 
-        profilePicture: userImage, 
-        designation: userDesignation, 
-        investor, 
-        startUp, 
-        isSubscribed: userIsSubscribed 
-      } = user || {};
+      const posts = savedPosts.map(({ _id, postType, description = "", image = "", images = [], pollOptions, likes, comments, createdAt, user }) => {
+        const { 
+          _id: userId, 
+          firstName: userFirstName, 
+          lastName: userLastName, 
+          profilePicture: userImage, 
+          designation: userDesignation, 
+          investor, 
+          startUp, 
+          isSubscribed: userIsSubscribed 
+        } = user || {};
+  
+        const isLiked = likes.some(like => like._id == userIdd);
+        const isMyPost = userId == userIdd;
 
-      const isLiked = likes.some(like => like._id == userId);
-      const isMyPost = userId == userId;
-
-      // const resharedPostData = resharedPostId ? {
-      //   ...resharedPostId._doc, // Get the reshared post data
-      //   user: resharedPostId.user // Attach user data for reshared post
-      // } : null;
-
-      return {
-        postId: _id,
-        postType,
-        isMyPost,
-        description,
-        isLiked,
-        image,
-        likes,
-        comments: comments.map(comment => ({
-          _id: comment._id,
-          text: comment.text,
-          user: `${comment.user.firstName} ${comment.user.lastName}`,
-          userDesignation: comment.user.designation || "",
-          userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
-          userImage: comment.user.profilePicture,
-          createdAt: timeAgo(comment.createdAt),
-          likesCount: `${comment.likes.length}`,
-          isMyComment: comment.user._id == userId,
-          isLiked: comment.likes.some(like => like == userId)
-        })),
-        createdAt: timeAgo(createdAt),
-        userId,
-        userFirstName,
-        userLastName,
-        userImage,
-        userDesignation: userDesignation || "",
-        userCompany: startUp?.company || investor?.companyName || "",
-        userIsSubscribed
-      };
-    });
+        // Combine image and images into a single array
+        const combinedImages = image ? [image, ...images] : images;
+  
+        // Calculate total votes across all options
+        const totalVotes = pollOptions?.reduce((sum, option) => sum + option.votes.length, 0) || 0;
+  
+        // Curate poll options
+        const curatedPollOptions = pollOptions?.map(option => ({
+          _id: option._id,
+          option: option.option,
+          numberOfVotes: option.votes.length,
+          hasVoted: option.votes.includes(userIdd)
+        }));
+  
+        // Get array of optionIds voted by current user
+        const myVotes = pollOptions
+          ?.filter(option => option.votes.includes(userIdd))
+          .map(option => option._id) || [];
+  
+        return {
+          postId: _id,
+          userProfilePicture: user.profilePicture,
+          userDesignation: user.designation,
+          userFirstName: user.firstName,
+          userLastName: user.lastName,
+          userLocation: startUp? startUp.location : investor? investor.location : " ",
+          description,
+          images: combinedImages, 
+          pollOptions: curatedPollOptions,
+          myVotes,
+          totalVotes,
+          age : timeAgo(createdAt),
+        };
+      });
 
     return {
       status: true,

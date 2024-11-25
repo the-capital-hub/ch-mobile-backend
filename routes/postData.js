@@ -40,9 +40,9 @@ router.get("/user_post",getUserPost)
 router.post("/newPost", createPost);
 // router.patch("/oldsavePost/:postId", savePost);
 router.patch("/savePost/:postId", savePostController);
-router.patch("/unsavePost", unsavePostController);
-router.get("/getSavedPostCollections/:userId", getAllSavedPostCollectionsController);
-router.post("/getSavedPostsByCollection/:userId", getSavedPostsByCollectionController);
+router.patch("/unsavePost", authenticateToken, unsavePostController);
+router.get("/getSavedPostCollections", authenticateToken, getAllSavedPostCollectionsController);
+router.post("/getSavedPostsByCollection",authenticateToken, getSavedPostsByCollectionController);
 
 router.post("/likeUnlikePost/:postId", likeUnlikePostController);
 router.get('/likeCount/:postId', getLikeCountController);

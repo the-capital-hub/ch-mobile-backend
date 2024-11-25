@@ -189,12 +189,13 @@ export const savePostController = async (req, res) => {
 
 export const unsavePostController = async (req, res) => {
   try {
-    const { userId, postId } = req.body;
+    const userId = req.userId
+    const { postId } = req.body;
     const response = await unsavePost(userId, postId);
     return res.send({...response});
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
+    return res.send({
       status: false,
       message: "An error occurred while unsaving the post.",
     });
@@ -204,12 +205,12 @@ export const unsavePostController = async (req, res) => {
 //get saved post
 export const getAllSavedPostCollectionsController = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.userId;
     const response = await getAllSavedPostCollections(userId);
     return res.send({status:true, ...response});
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
+    return res.send({
       status: false,
       message: "An error occurred while getting saved post collections.",
     });
@@ -219,13 +220,13 @@ export const getAllSavedPostCollectionsController = async (req, res) => {
 //get saved post by collection
 export const getSavedPostsByCollectionController = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.userId;
     const { collectionName } = req.body;
     const response = await getSavedPostsByCollection(userId, collectionName);
     return res.send({...response});
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
+    return res.send({
       status: false,
       message: "An error occurred getting saved post.",
     });
