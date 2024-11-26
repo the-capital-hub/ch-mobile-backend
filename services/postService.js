@@ -579,6 +579,30 @@ export const getAllSavedPostCollections = async (userId) => {
 
     return {
       message: "Saved post collections retrieved successfully",
+      data:  collections,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      message: "An error occurred while fetching saved post collections.",
+    };
+  }
+};
+
+export const getAllSavedPostCollectionsProfile = async (userId) => {
+  try {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return {
+        status: false,
+        message: "User not found",
+      };
+    }
+    const collections = user.savedPosts;
+    const collectionNames = ["my saved posts", ...collections.map(c => c.name)];
+
+    return {
+      message: "Saved post collections retrieved successfully",
       data:  collectionNames,
     };
   } catch (error) {

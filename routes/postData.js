@@ -24,7 +24,8 @@ import {
   getUserPost,
   getPost,
   getAllPostsPublic,
-  voteForPollController
+  voteForPollController,
+  getAllSavedPostCollectionsProfileController
 } from "../controllers/postController.js";
 import { authenticateToken } from "../middlewares/authenticateToken.js";
 const router = express.Router();
@@ -41,7 +42,9 @@ router.post("/newPost", createPost);
 // router.patch("/oldsavePost/:postId", savePost);
 router.patch("/savePost/:postId", savePostController);
 router.patch("/unsavePost", authenticateToken, unsavePostController);
-router.get("/getSavedPostCollections", authenticateToken, getAllSavedPostCollectionsController);
+router.get("/getSavedPostCollections/:userId", getAllSavedPostCollectionsController);
+router.get("/getSavedPostCollectionsProfile", authenticateToken, getAllSavedPostCollectionsProfileController);
+
 router.post("/getSavedPostsByCollection",authenticateToken, getSavedPostsByCollectionController);
 
 router.post("/likeUnlikePost/:postId", likeUnlikePostController);

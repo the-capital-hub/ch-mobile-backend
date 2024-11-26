@@ -24,6 +24,7 @@ import {
   getPostById,
   allPostsDataPublic,
   voteForPoll,
+  getAllSavedPostCollectionsProfile,
 } from "../services/postService.js";
 import { UserModel } from "../models/User.js";
 
@@ -205,8 +206,22 @@ export const unsavePostController = async (req, res) => {
 //get saved post
 export const getAllSavedPostCollectionsController = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.params.userId;
     const response = await getAllSavedPostCollections(userId);
+    return res.send({status:true, ...response});
+  } catch (error) {
+    console.error(error);
+    return res.send({
+      status: false,
+      message: "An error occurred while getting saved post collections.",
+    });
+  }
+};
+
+export const getAllSavedPostCollectionsProfileController = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const response = await getAllSavedPostCollectionsProfile(userId);
     return res.send({status:true, ...response});
   } catch (error) {
     console.error(error);
