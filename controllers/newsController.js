@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import fetch from 'node-fetch';
 async function makeApiRequest(url) {
     try {
         const response = await axios.get(url);
