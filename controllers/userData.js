@@ -1081,7 +1081,9 @@ export const deleteExperienceController = async (req, res) => {
 export const getProfilePostsController = async (req, res) => {
   try {
     const { type } = req.params;
+    console.log(req.userId);
     const response = await getProfilePosts(req.userId, type);
+
     res.send({status:true, message:"Profile posts fetched successfully", data:response});
   } catch (error) {
     console.error(error);
