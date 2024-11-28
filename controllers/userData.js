@@ -774,10 +774,7 @@ export const loginUserController = async (req, res, next) => {
 // get user by id
 export const getUserByIdController = async (req, res) => {
   try {
-
-    console.log(req.userId);
-    const response = await getUserById(req.userId);
-    console.log(response);
+    const response = await getUserById(req.params.id);
     res.send({status: true, message: "User details fetched", data:response});
   } catch (error) {
     console.error(error);
@@ -1084,9 +1081,7 @@ export const deleteExperienceController = async (req, res) => {
 export const getProfilePostsController = async (req, res) => {
   try {
     const { type } = req.params;
-    console.log(req.userId);
     const response = await getProfilePosts(req.userId, type);
-
     res.send({status:true, message:"Profile posts fetched successfully", data:response});
   } catch (error) {
     console.error(error);
