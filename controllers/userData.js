@@ -776,7 +776,7 @@ export const getUserByIdController = async (req, res) => {
   try {
 
     console.log(req.userId);
-    const response = await getUserById(req.params.id);
+    const response = await getUserById(req.userId);
     console.log(response);
     res.send({status: true, message: "User details fetched", data:response});
   } catch (error) {
