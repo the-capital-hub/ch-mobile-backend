@@ -16,7 +16,8 @@ import {
   addMilestoneToUserController,
   getUserMilestonesController,
   deleteUserMilestoneController,
-  deleteStartUpController
+  deleteStartUpController,
+  getOneLinkDetailsController
 } from "../controllers/startUpController.js";
 import { authenticateToken } from "../middlewares/authenticateToken.js";
 
@@ -56,6 +57,7 @@ router.get("/details/:userId", startUpData);
 router.patch("/onelink", editStartUpOneLink);
 router.patch("/introMessage", editStartUpIntroMessage);
 router.put("/onePager", editOnePager);
+router.get("/onelinkDetails", getOneLinkDetailsController);
 
 router.get("/getAllStartUps", getAllStartupsController);
 router.get("/searchStartUps/:searchQuery", getStartupsBySearchController);

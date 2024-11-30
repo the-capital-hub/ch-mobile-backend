@@ -237,7 +237,7 @@ export const updateStartUpData = async (founderId, introductoryMessage) => {
     const startUp = await StartUpModel.findOne({ founderId });
     if (!startUp) {
       return {
-        status: 404,
+        status: false,
         message: "No startUp found",
       };
     }
@@ -252,14 +252,14 @@ export const updateStartUpData = async (founderId, introductoryMessage) => {
       { new: true }
     );
     return {
-      status: 200,
+      status: true,
       data: updatedData,
       message: `${startUp.company} updated succesfully`,
     };
   } catch (error) {
     console.error("Error updating StartUp details:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while updating StartUp details.",
     };
   }
@@ -702,3 +702,46 @@ export const deleteUserMilestone = async (oneLinkId, milestoneId) => {
     };
   }
 }
+
+
+export const getOneLinkDetails = async (founderId) => {
+  try {
+    const user = await UserModel.findOne({ _id: founderId }).populate(
+      "startUp"
+    );
+    if (!user) {
+      return {
+        status: false,
+        message: "User not found.",
+      };
+    }
+    if (!user.startUp) {
+       return {
+         status: false,
+         message: "User does not have a startup.",
+      };
+    }
+    const startUp = await StartUpModel.findOne({ _id:user.startUp });
+
+
+    const curatedDetails = {
+      startUpId : startUp._id,
+      name: startUp.company,
+      oneLink: `https://thecapitalhub.in/onelink/${startUp.oneLink}/${user.oneLinkId}`,
+      introductoryMessage: startUp?.introductoryMessage,
+      previousIntroductoryMessage: startUp?.previousIntroductoryMessage,
+    }
+
+    return {
+      status: true,
+      message: "OneLink details retrieved successfully.",
+      data: curatedDetails,
+    };
+  } catch (err) {
+    console.error("Error getting StartUp details:", err);
+    return {
+      status: false,
+      message: "An error occurred while getting StartUp details.",
+    };
+  }
+};

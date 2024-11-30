@@ -1236,19 +1236,19 @@ export const createSecretKey = async (userId, secretOneLinkKey) => {
     );
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "Secret key created and stored successfully",
-      user: user,
+      data: user.secretKey
     };
   } catch (error) {
     console.error("Error creating and storing secret key:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while creating and storing the secret key.",
     };
   }

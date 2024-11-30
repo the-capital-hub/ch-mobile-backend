@@ -13,7 +13,8 @@ import {
   addMilestoneToUser,
   getUserMilestones,
   deleteUserMilestone,
-  deleteStartUp
+  deleteStartUp,
+  getOneLinkDetails
 } from "../services/startUpService.js";
 import { getStartUpData } from "../services/userService.js";
 
@@ -63,16 +64,15 @@ export const startUpData = async (req, res) => {
 // Edit start up OneLink
 export const editStartUpOneLink = async (req, res) => {
   try {
-    const { oneLink, userId } = req.body;
-    const { status, ...data } = await updateStartUpData(userId, { oneLink });
-    res
-      .status(status)
-      .send({ message: data.message, data: { oneLink: data.data.oneLink } });
+    const { oneLink } = req.body;
+    const { status, ...data } = await updateStartUpData(req.userId, { oneLink });
+    res.send({ status: true ,message: data.message, data: { oneLink: data.data.oneLink } });
   } catch (error) {
     console.log("Error updating OneLink: ", error);
-    res.status(500).send({
-      error: true,
+    res.send({
+      status: false,
       message: "An error occured while changing OneLink",
+      data: []
     });
   }
 };
@@ -81,16 +81,14 @@ export const editStartUpOneLink = async (req, res) => {
 export const editStartUpIntroMessage = async (req, res) => {
   try {
     const { introductoryMessage } = req.body;
-    const { status, ...data } = await updateStartUpData(req.userId, introductoryMessage);
-    res.status(status).send({
-      message: data.message,
-      data: data,
-    });
+    const response = await updateStartUpData(req.userId, introductoryMessage);
+    res.send(response);
   } catch (error) {
-    console.log("Error updating Introductory message: ", error);
-    res.status(500).send({
-      error: true,
-      message: "An error occured while changing Introductory message",
+    console.log("Error updating OneLink: ", error);
+    res.send({
+      status: false,
+      message: "An error occured while changing OneLink",
+      data: []
     });
   }
 };
@@ -276,3 +274,17 @@ export const deleteUserMilestoneController = async (req, res) => {
     });
   }
 };
+
+export const getOneLinkDetailsController = async (req, res) => {
+  try {
+    const response = await getOneLinkDetails(req.userId);
+    res.send(response);
+  } catch (err) {
+    console.error("Error getting onelink details:", err);
+    res.send({
+      status: false,
+      message: "An error occurred while getting onelink details.",
+    });
+  }
+};
+

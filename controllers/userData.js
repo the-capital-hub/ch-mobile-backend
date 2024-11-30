@@ -990,11 +990,11 @@ export const createSecretKeyController = async (req, res) => {
     const { secretOneLinkKey } = req.body;
     const userId = req.userId;
     const response = await createSecretKey(userId, secretOneLinkKey);
-    res.status(response.status).send(response);
+    res.send(response);
   } catch (error) {
     console.error(error);
-    res.status(500).send({
-      status: 500,
+    res.send({
+      status: false,
       message: "An error occurred while creating secret key.",
     });
   }
