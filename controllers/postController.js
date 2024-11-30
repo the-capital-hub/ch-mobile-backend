@@ -49,12 +49,17 @@ export const createPost = async (req, res) => {
       user: req.userId,
     });
     res.send({
+      status: true,
       message: "Post created succesfully",
       data: newPost,
     });
   } catch (err) {
     console.error("Error creating new post: ", err);
-    res.status(500).send(err);
+    res.send({
+      status:false,
+      message:err,
+      data:[]
+    });
   }
 };
 
