@@ -89,7 +89,7 @@ export const createNewPost = async (data) => {
       });
       data.documentUrl = secure_url;
     }
-    if (data.resharedPostId) {
+    if (data.resharedPostId && data.resharedPostId.length > 5) {
       const sharedPost = await PostModel.findByIdAndUpdate(
         data.resharedPostId,
         {
@@ -106,6 +106,9 @@ export const createNewPost = async (data) => {
       data.resharedPostId = await PostModel.findById(
         data.resharedPostId
       ).populate("user");
+    } else {
+      delete data.resharedPostId;
+      console.log("resharedPostId is too short to process.");
     }
 
     if (data.pollOptions) {
