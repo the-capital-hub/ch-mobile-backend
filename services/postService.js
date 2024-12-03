@@ -302,6 +302,8 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         ?.filter(option => option.votes.includes(userIdd))
         .map(option => option._id) || [];
 
+        const videos = video? video : "";
+        const documentUrls = documentUrl? documentUrl : "";
       return {
         postId: _id,
         postType,
@@ -310,8 +312,8 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         isSaved,
         isLiked,
         image: combinedImages,
-        video,
-        documentUrl,
+        video :videos,
+        documentUrl :documentUrls,
         pollOptions: curatedPollOptions,
         myVotes,
         totalVotes,
