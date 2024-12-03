@@ -393,13 +393,13 @@ export const sendOTP = async (req, res) => {
         },
       }
     );
-    return res.status(200).send({
+    return res.send({
       status:true,
       data: {orderId: response.data.orderId},
       message: "OTP Send successfully",
     });
   } catch (err) {
-    return res.status(500).json({status:false, error: "Failed to fetch data", data:{}});
+    return res.json({status:false, error: "Failed to fetch data", data:{}});
   }
 };
 export const resendOtp = async(req,res)=>{
@@ -417,13 +417,13 @@ export const resendOtp = async(req,res)=>{
         },
       }
     );
-    return res.status(200).send({
+    return res.send({
       status:true,
       data: {orderId: response.data.orderId},
       message: "OTP Re-sent successfully",
     });
   } catch (err) {
-    return res.status(500).json({status:false, error: err, data:{}});
+    return res.json({status:false, error: err, data:{}});
   }
 };
 
@@ -456,7 +456,7 @@ const phoneNumber = req.body.phoneNumber
       secretKey
     );
 
-      return res.status(200).send({
+      return res.send({
         status:true,
         data:{
         user:user,
@@ -465,13 +465,13 @@ const phoneNumber = req.body.phoneNumber
         message: "OTP verified",
       });
  }
-    return res.status(200).send({
+    return res.send({
       status:false,
       data: response.data,
       message: "Otp not verified",
     });
   } catch (err) {
-    return res.status(500).json({ status: false, error: err, data:{} });
+    return res.json({ status: false, error: err, data:{} });
   }
 };
 
@@ -581,9 +581,7 @@ export const registerUserController = async (req, res, next) => {
           oneLink: uniqueOneLink,
         });
         await existingCompany.save();
-        return res
-          .status(200)
-          .json({ message: "Investor Updated", data: existingCompany });
+        return res.json({status:true, message: "Investor Updated", data: existingCompany });
       }
       const newInvestor = await InvestorModel.create({
         companyName: company,
@@ -676,16 +674,12 @@ export const registerUserController = async (req, res, next) => {
         { userId: newUser._id, phoneNumber: newUser.phoneNumber },
         secretKey
       );
-      return res
-        .status(201)
-        .json({ status: true, message: "User added successfully", data: newUser, token });
+      return res.json({ status: true, message: "User added successfully", data: newUser, token });
     }
   } catch (error) {
-    res.status(409).json({
-      success: false,
+    res.json({
       status:false,
-      operational: true,
-      error:error,
+      error:error.message,
       data:{}
     });
   }
