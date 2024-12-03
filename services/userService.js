@@ -204,35 +204,48 @@ export const getUserById = async (userId) => {
     };
 
     const userProfile = {
-      profilePicture: user.profilePicture,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      userName: user.userName,
-      designation: user.designation,
-      companyName: user.startUp?.company || user.investor?.companyName, 
-      location: user.startUp?.location || user.investor?.location, 
+      profilePicture: user.profilePicture || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      userName: user.userName || "",
+      designation: user.designation || "",
+      companyName: user.startUp?.company || user.investor?.companyName || "",
+      location: user.startUp?.location || user.investor?.location || "",
       bio: user.bio || "",
-      education: user.education,
-      experience: user.experience,
-      connectionsCount: user.connections.length,
-      followersCount: user.connectionsReceived.length,
-      isSubscribed: user.isSubscribed,
+      education: user.education || "",
+      experience: user.experience || "",
+      connectionsCount: user.connections?.length || 0,
+      followersCount: user.connectionsReceived?.length || 0,
+      isSubscribed: user.isSubscribed || false,
       recentConnections: user.connections?.length 
         ? user.connections
             .sort((a, b) => b.createdAt - a.createdAt)
             .slice(0, 4)
             .map(connection => ({
-              firstName: connection.firstName,
-              lastName: connection.lastName,
-              profilePicture: connection.profilePicture,
-              designation: connection.designation
+              firstName: connection.firstName || "",
+              lastName: connection.lastName || "",
+              profilePicture: connection.profilePicture || "",
+              designation: connection.designation || ""
             }))
         : [],
       milestone_profile,
       milestone_company,
       milestone_onelink,
       milestone_documents,
-      milestone_posts
+      milestone_posts,
+      companyData: {
+        companyName: "",
+        location: "",
+        logo: "",
+        description: "",
+        sector: "",
+        industry: "",
+        startedAtDate: "",
+        socialLinks: [],
+        stage: "",
+        age: "",
+        lastFunding: ""
+      }
     };
 
     // Add profile specific fields based on user type
@@ -258,17 +271,17 @@ export const getUserById = async (userId) => {
       }
 
       userProfile.companyData = {
-        companyName: user.startUp.company,
-        location: user.startUp.location,
-        logo: user.startUp.logo,
-        description: user.startUp.description,
-        sector: user.startUp.sector,
-        industry: user.startUp.industryType,
-        startedAtDate: formatDate(user.startUp.startedAtDate),
-        socialLinks,  // Use the new formatted socialLinks
-        stage: user.startUp.stage,
-        age: formatDate(user.startUp.age),
-        lastFunding: formatDate(user.startUp.lastFunding)
+        companyName: user.startUp.company || "",
+        location: user.startUp.location || "",
+        logo: user.startUp.logo || "",
+        description: user.startUp.description || "",
+        sector: user.startUp.sector || "",
+        industry: user.startUp.industryType || "",
+        startedAtDate: formatDate(user.startUp.startedAtDate) || "",
+        socialLinks, 
+        stage: user.startUp.stage || "",
+        age: formatDate(user.startUp.age) || "",
+        lastFunding: formatDate(user.startUp.lastFunding) || ""
       };
     } else if (user.investor) {
       const socialLinks = [];
@@ -292,16 +305,16 @@ export const getUserById = async (userId) => {
       }
 
       userProfile.companyData = {
-        companyName: user.investor.companyName,
-        location: user.investor.location,
-        logo: user.investor.logo,
-        description: user.investor.description,
-        sector: user.investor.sector,
-        industry: user.investor.industry,
-        startedAtDate: formatDate(user.investor.startedAtDate),
-        socialLinks,  // Use the new formatted socialLinks
-        stage: user.investor.stage,
-        age: formatDate(user.investor.age)
+        companyName: user.investor.companyName || "",
+        location: user.investor.location || "",
+        logo: user.investor.logo || "",
+        description: user.investor.description || "",
+        sector: user.investor.sector || "",
+        industry: user.investor.industry || "",
+        startedAtDate: formatDate(user.investor.startedAtDate) || "",
+        socialLinks,
+        stage: user.investor.stage || "",
+        age: formatDate(user.investor.age) || ""
       };
     }
 
