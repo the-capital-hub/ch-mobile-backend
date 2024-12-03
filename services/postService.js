@@ -30,9 +30,10 @@ const timeAgo = (date) => {
   return `just now`; // Fallback for less than a minute
 };
 
-const base64ToBuffer = (base64String) => {
-  const base64Data = base64String.replace(/^data:image\/jpg;base64,/, '');
-  return Buffer.from(base64Data, 'base64');
+const base64ToBuffer = (base64String) => {  
+  //const base64Data = base64String.replace(/^data:image\/jpg;base64,/, '');
+  const buffer = Buffer.from(base64String, 'base64');
+  return buffer
 };
 
 export const createNewPost = async (data) => {
@@ -43,8 +44,9 @@ export const createNewPost = async (data) => {
       const uploadedImages = await Promise.all(
         imagesArray.map(async (image) => {
           // Check if the image is a base64 string
-          const isBase64 = image.startsWith('data:image/');
-          if (isBase64) {
+         // const isBase64 = image.startsWith('data:image/');
+         const isBase64 = true; 
+         if (isBase64) {
             const imageBuffer = base64ToBuffer(image);
             const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
             const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
@@ -72,7 +74,7 @@ export const createNewPost = async (data) => {
       const { secure_url } = await cloudinary.uploader.upload(videoBase64, {
         folder: `${process.env.CLOUDIANRY_FOLDER}/posts/videos`,
         resource_type: "video",
-        // format: "webm",
+        format: "mp4",
         unique_filename: true,
       });
       data.video = secure_url;
@@ -80,11 +82,10 @@ export const createNewPost = async (data) => {
 
     if (data?.documentUrl){
       const documentBuffer = base64ToBuffer(data.documentUrl);
-      const documentBase64 = `data:doc/pdf;base64,${documentBuffer.toString('base64')}`;
+      const documentBase64 = `data:application/pdf;base64,${documentBuffer.toString('base64')}`;
       const { secure_url } = await cloudinary.uploader.upload(documentBase64, {
-        folder: `${process.env.CLOUDIANRY_FOLDER}/posts/document`,
-        resource_type: "document",
-        // format: "webm",
+        folder: `${process.env.CLOUDIANRY_FOLDER}/posts/documents`,
+        format: "pdf",
         unique_filename: true,
       });
       data.documentUrl = secure_url;
@@ -266,7 +267,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       .skip(skip)
       .limit(perPage);
 
-    const posts = allPosts.map(({ _id, postType, description = "", image = "", images = [], pollOptions, likes, comments, createdAt, user }) => {
+    const posts = allPosts.map(({ _id, postType, description = "", image = "", images = [], video, documentUrl, pollOptions, likes, comments, createdAt, user }) => {
       const { 
         _id: userId, 
         firstName: userFirstName, 
@@ -308,7 +309,9 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         description,
         isSaved,
         isLiked,
-        image: combinedImages, // Now returns an array containing both image and images
+        image: combinedImages,
+        video,
+        documentUrl,
         pollOptions: curatedPollOptions,
         myVotes,
         totalVotes,

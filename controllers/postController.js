@@ -57,7 +57,7 @@ export const createPost = async (req, res) => {
     console.error("Error creating new post: ", err);
     res.send({
       status:false,
-      message:err,
+      message:err.message,
       data:[]
     });
   }
