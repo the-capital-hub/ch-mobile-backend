@@ -253,7 +253,7 @@ export const updateStartUpData = async (founderId, introductoryMessage) => {
     );
     return {
       status: true,
-      data: {introductoryMessage: introductoryMessage},
+      data:  introductoryMessage,
       message: `${startUp.company} updated succesfully`,
     };
   } catch (error) {
