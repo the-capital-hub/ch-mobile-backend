@@ -253,7 +253,7 @@ export const updateStartUpData = async (founderId, introductoryMessage) => {
     );
     return {
       status: true,
-      data: updatedData,
+      data: {introductoryMessage: introductoryMessage},
       message: `${startUp.company} updated succesfully`,
     };
   } catch (error) {
@@ -730,6 +730,7 @@ export const getOneLinkDetails = async (founderId) => {
       oneLink: `https://thecapitalhub.in/onelink/${startUp.oneLink}/${user.oneLinkId}`,
       introductoryMessage: startUp?.introductoryMessage,
       previousIntroductoryMessage: startUp?.previousIntroductoryMessage,
+      secretOneLinkKey: user.secretKey
     }
 
     return {
