@@ -1245,7 +1245,7 @@ export const toggleCommentLike = async (postId, commentId, userId) => {
 };
 
 
-export const getPostById = async (postId) => {
+export const getPostById = async (postId, userId) => {
   try {
     const post = await PostModel.findById(postId)
       .populate({
@@ -1278,15 +1278,9 @@ export const getPostById = async (postId) => {
 
     const { 
       _id, 
-      postType, 
       description = "", 
       image = "", 
       images = [], 
-      video, 
-      documentUrl, 
-      pollOptions, 
-      likes, 
-      comments, 
       createdAt, 
       user 
     } = post;
@@ -1301,35 +1295,47 @@ export const getPostById = async (postId) => {
       startUp 
     } = user || {};
 
+    // Merge image and images array
+    let combinedImages = [];
+    if (image) {
+      combinedImages.push(image);
+    }
+    if (Array.isArray(images)) {
+      combinedImages = [...combinedImages, ...images];
+    }
+
+    // Calculate total votes and format poll options
+    const totalVotes = post.pollOptions?.reduce((sum, option) => sum + option.votes.length, 0) || 0;
+
+    // Curate poll options
+    const curatedPollOptions = post.pollOptions?.map(option => ({
+      _id: option._id,
+      option: option.option,
+      numberOfVotes: option.votes.length,
+      hasVoted: option.votes.includes(userId)
+    }));
+
+    // Get array of optionIds voted by current user
+    const myVotes = post.pollOptions
+      ?.filter(option => option.votes.includes(userId))
+      .map(option => option._id) || [];
+
     return {
       status: true,
       message: "Post retrieved successfully",
       data: {
-        postId: _id,
-        postType,
-        description,
-        image: image ? [image, ...images] : images,
-        video: video || "",
-        documentUrl: documentUrl || "",
-        pollOptions: pollOptions || [],
-        likes,
-        comments: comments.map(comment => ({
-          _id: comment._id,
-          text: comment.text,
-          user: `${comment.user.firstName} ${comment.user.lastName}`,
-          userDesignation: comment.user.designation || "",
-          userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
-          userImage: comment.user.profilePicture,
-          createdAt: timeAgo(comment.createdAt),
-          likesCount: `${comment.likes.length}`,
-        })),
-        createdAt: timeAgo(createdAt),
-        userId,
+        userProfilePicture: userImage,
+        userDesignation: userDesignation || "",
         userFirstName,
         userLastName,
-        userImage,
-        userDesignation: userDesignation || "",
-        userCompany: startUp?.company || investor?.companyName || "",
+        userLocation: startUp ? startUp.location : investor ? investor.location : "",
+        postId: _id,
+        description,
+        images: combinedImages,
+        age: timeAgo(createdAt),
+        pollOptions: curatedPollOptions,
+        myVotes,
+        totalVotes
       }
     };
   } catch (error) {
