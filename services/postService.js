@@ -1252,8 +1252,8 @@ export const getPostById = async (postId, userId) => {
         path: "user",
         select: "firstName lastName designation profilePicture investor startUp oneLinkId",
         populate: [
-          { path: "investor", select: "companyName" },
-          { path: "startUp", select: "company" },
+          { path: "investor", select: "companyName location" },
+          { path: "startUp", select: "company location" },
         ],
       })
       .populate({
@@ -1328,7 +1328,7 @@ export const getPostById = async (postId, userId) => {
         userDesignation: userDesignation || "",
         userFirstName,
         userLastName,
-        userLocation: startUp ? startUp.location : investor ? investor.location : "",
+        userLocation: post.user.startUp ? post.user.startUp.location : post.user.investor ? post.user.investor.location : "",
         postId: _id,
         description,
         images: combinedImages,
