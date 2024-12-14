@@ -415,7 +415,7 @@ export const toggleCommentLikeController = async (req, res) => {
 export const getPost = async (req,res) =>{
   try{
     const response = await getPostById(req.body.postId)
-    return res.status(response.status).json(response.data)
+    return res.json({status: true,message:"post data fetched",data:response.data})
   } catch (error){
     return res.json({
       status:false,

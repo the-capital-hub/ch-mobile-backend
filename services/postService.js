@@ -224,7 +224,7 @@ export const allPostsData = async (page, perPage) => {
   }
 };
 
-export const allPostsDataPublic = async (userIdd , page, perPage) => {
+export const allPostsDataPublic = async (userIdd, page, perPage) => {
   try {
     const skip = (page - 1) * perPage;
     const user = await UserModel.findById(userIdd).populate('savedPosts.posts').exec();
@@ -242,23 +242,32 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       })
       .populate({
         path: "resharedPostId",
-        populate: {
+        populate: [{
           path: "user",
-          select:
-            "firstName lastName designation profilePicture investor startUp oneLinkId",
+          select: "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed",
           populate: [
             { path: "investor", select: "companyName" },
             { path: "startUp", select: "company" },
           ],
-        },
+        }, {
+          path: "likes",
+          select: "firstName lastName"
+        }, {
+          path: "comments.user",
+          select: "firstName lastName designation profilePicture investor startUp",
+          populate: [
+            { path: "investor", select: "companyName" },
+            { path: "startUp", select: "company" },
+          ],
+        }]
       })
       .populate({
-        path:"likes",
+        path: "likes",
         select: "firstName lastName"
       })
       .populate({
-        path:"comments.user",
-        select:"firstName lastName designation profilePicture investor startUp",
+        path: "comments.user",
+        select: "firstName lastName designation profilePicture investor startUp",
         populate: [
           { path: "investor", select: "companyName" },
           { path: "startUp", select: "company" },
@@ -268,8 +277,21 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       .skip(skip)
       .limit(perPage);
 
-    // Use Promise.all to resolve all promises from the map function
-    const posts = await Promise.all(allPosts.map(async ({ _id, postType, description = "", image = "", images = [], video, documentUrl, pollOptions, likes, comments, createdAt, user }) => {
+    const posts = await Promise.all(allPosts.map(async ({ 
+      _id, 
+      postType, 
+      description = "", 
+      image = "", 
+      images = [], 
+      video, 
+      documentUrl, 
+      pollOptions, 
+      likes, 
+      comments, 
+      createdAt, 
+      user,
+      resharedPostId
+    }) => {
       const { 
         _id: userId, 
         firstName: userFirstName, 
@@ -279,9 +301,9 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         investor, 
         startUp, 
         isSubscribed: userIsSubscribed,
-        connections: connections,
-        connectionsSent: connectionsSent,
-        connectionsReceived: connectionsReceived 
+        connections,
+        connectionsSent,
+        connectionsReceived 
       } = user || {};
 
       const isLiked = likes.some(like => like._id == userIdd);
@@ -311,19 +333,87 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       const documentUrls = documentUrl ? documentUrl : "";
       
       let connection_status;
-      //let connection_id;
 
       if (connections.includes(userIdd)){
-        connection_status = "accepted"; // unfollow button -- done
+        connection_status = "accepted";
       }
       else if(connectionsReceived.includes(userIdd)){
-        connection_status = "pending"; // cancel button 
+        connection_status = "pending";
       }
       else if(connectionsSent.includes(userIdd)){
-        connection_status = "pending"; // accept button 
+        connection_status = "pending";
       }
       else{
-        connection_status = "not_sent"; // follow button -- done
+        connection_status = "not_sent";
+      }
+
+      // Handle reshared post data
+      let resharedPostData = null;
+      if (resharedPostId) {
+        const {
+          _id: resharedId,
+          postType: resharedPostType,
+          description: resharedDescription = "",
+          image: resharedImage = "",
+          images: resharedImages = [],
+          video: resharedVideo,
+          documentUrl: resharedDocumentUrl,
+          pollOptions: resharedPollOptions,
+          likes: resharedLikes,
+          comments: resharedComments,
+          createdAt: resharedCreatedAt,
+          user: resharedUser
+        } = resharedPostId;
+
+        // Combine reshared image and images
+        const resharedCombinedImages = resharedImage ? [resharedImage, ...resharedImages] : resharedImages;
+
+        // Calculate reshared poll data
+        const resharedTotalVotes = resharedPollOptions?.reduce((sum, option) => sum + option.votes.length, 0) || 0;
+        const resharedCuratedPollOptions = resharedPollOptions?.map(option => ({
+          _id: option._id,
+          option: option.option,
+          numberOfVotes: option.votes.length,
+          hasVoted: option.votes.includes(userIdd)
+        }));
+
+        resharedPostData = {
+          postId: resharedId,
+          postType: resharedPostType,
+          isMyPost: resharedUser?._id == userIdd,
+          description: resharedDescription,
+          isSaved: savedPostIds.includes(resharedId.toString()),
+          isLiked: resharedLikes.some(like => like._id == userIdd),
+          image: resharedCombinedImages,
+          video: resharedVideo || "",
+          documentUrl: resharedDocumentUrl || "",
+          pollOptions: resharedCuratedPollOptions,
+          myVotes: resharedPollOptions
+            ?.filter(option => option.votes.includes(userIdd))
+            .map(option => option._id) || [],
+          totalVotes: resharedTotalVotes,
+          likes: resharedLikes,
+          comments: resharedComments.map(comment => ({
+            _id: comment._id,
+            text: comment.text,
+            user: `${comment.user.firstName} ${comment.user.lastName}`,
+            userDesignation: comment.user.designation || "",
+            userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
+            userImage: comment.user.profilePicture,
+            createdAt: timeAgo(comment.createdAt),
+            likesCount: `${comment.likes.length}`,
+            isMyComment: comment.user._id == userIdd,
+            isLiked: comment.likes.some(like => like == userIdd)
+          })),
+          createdAt: timeAgo(resharedCreatedAt),
+          userId: resharedUser?._id,
+          userFirstName: resharedUser?.firstName,
+          userLastName: resharedUser?.lastName,
+          userImage: resharedUser?.profilePicture,
+          userDesignation: resharedUser?.designation || "",
+          userCompany: resharedUser?.startUp?.company || resharedUser?.investor?.companyName || "",
+          userIsSubscribed: resharedUser?.isSubscribed
+        };
       }
 
       return {
@@ -361,6 +451,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         userCompany: startUp?.company || investor?.companyName || "",
         userIsSubscribed,
         connection_status,
+        resharedPostData
       };
     }));
 
@@ -1155,27 +1246,100 @@ export const toggleCommentLike = async (postId, commentId, userId) => {
 
 
 export const getPostById = async (postId) => {
-  try{
-   const post = await PostModel.findById(postId)
-   if (!post) {
+  try {
+    const post = await PostModel.findById(postId)
+      .populate({
+        path: "user",
+        select: "firstName lastName designation profilePicture investor startUp oneLinkId",
+        populate: [
+          { path: "investor", select: "companyName" },
+          { path: "startUp", select: "company" },
+        ],
+      })
+      .populate({
+        path: "likes",
+        select: "firstName lastName"
+      })
+      .populate({
+        path: "comments.user",
+        select: "firstName lastName designation profilePicture investor startUp",
+        populate: [
+          { path: "investor", select: "companyName" },
+          { path: "startUp", select: "company" },
+        ],
+      });
+
+    if (!post) {
+      return {
+        status: false,
+        message: "Post not found.",
+      };
+    }
+
+    const { 
+      _id, 
+      postType, 
+      description = "", 
+      image = "", 
+      images = [], 
+      video, 
+      documentUrl, 
+      pollOptions, 
+      likes, 
+      comments, 
+      createdAt, 
+      user 
+    } = post;
+
+    const { 
+      _id: userId, 
+      firstName: userFirstName, 
+      lastName: userLastName, 
+      profilePicture: userImage, 
+      designation: userDesignation, 
+      investor, 
+      startUp 
+    } = user || {};
+
+    return {
+      status: true,
+      message: "Post retrieved successfully",
+      data: {
+        postId: _id,
+        postType,
+        description,
+        image: image ? [image, ...images] : images,
+        video: video || "",
+        documentUrl: documentUrl || "",
+        pollOptions: pollOptions || [],
+        likes,
+        comments: comments.map(comment => ({
+          _id: comment._id,
+          text: comment.text,
+          user: `${comment.user.firstName} ${comment.user.lastName}`,
+          userDesignation: comment.user.designation || "",
+          userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
+          userImage: comment.user.profilePicture,
+          createdAt: timeAgo(comment.createdAt),
+          likesCount: `${comment.likes.length}`,
+        })),
+        createdAt: timeAgo(createdAt),
+        userId,
+        userFirstName,
+        userLastName,
+        userImage,
+        userDesignation: userDesignation || "",
+        userCompany: startUp?.company || investor?.companyName || "",
+      }
+    };
+  } catch (error) {
+    console.error(error);
     return {
       status: false,
-      message: "Post not found.",
+      message: "An error occurred while retrieving the post.",
     };
   }
-
-  return {
-    status: true,
-    message: "Post removed from featured posts.",
-    data:post
-  };
-  }catch(error){
-    return {
-      status: false,
-      message:"An error occurred while toggling the comment like status.",
-    }
-  }
-}
+};
 
 
 export const voteForPoll = async(postId, optionId, userId) => {
