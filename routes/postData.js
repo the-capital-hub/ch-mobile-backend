@@ -34,7 +34,7 @@ router.use(authenticateToken);
 
 router.get("/getposts", getAllPosts);
 router.get("/getPublicPosts", getAllPostsPublic);
-router.get("/get_post_by_id",getPost);
+router.post("/get_post_by_id",getPost);
 router.get("/getSinglePost/:id", getSinglePost);
 router.get("/user_post",getUserPost)
 // Single user routes
