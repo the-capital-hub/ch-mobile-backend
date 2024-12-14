@@ -348,7 +348,7 @@ export const allPostsDataPublic = async (userIdd, page, perPage) => {
       }
 
       // Handle reshared post data
-      let resharedPostData = null;
+      let resharedPostData = {};
       if (resharedPostId) {
         const {
           _id: resharedId,
