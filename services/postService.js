@@ -3,6 +3,7 @@ import { UserModel } from "../models/User.js";
 import { cloudinary } from "../utils/uploadImage.js";
 import { addNotification, deleteNotification } from "./notificationService.js";
 import { getUserById } from "./userService.js";
+import { getConnectionRequestBetweenTwoPeople } from "./connectionService.js";
 
 const timeAgo = (date) => {
   const now = new Date();
@@ -186,7 +187,7 @@ export const allPostsData = async (page, perPage) => {
       .skip(skip)
       .limit(perPage);
 
-    const posts = allPosts.map(({ _id, postType, description = "", image = "", likes, comments, createdAt, user }) => {
+    const posts = allPosts.map(async ({ _id, postType, description = "", image = "", likes, comments, createdAt, user }) => {
       const { 
         _id: userId, 
         firstName: userFirstName, 
@@ -233,7 +234,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       .populate({
         path: "user",
         select:
-          "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed",
+          "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed connections connectionsSent connectionsReceived",
         populate: [
           { path: "investor", select: "companyName" },
           { path: "startUp", select: "company" },
@@ -267,7 +268,8 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
       .skip(skip)
       .limit(perPage);
 
-    const posts = allPosts.map(({ _id, postType, description = "", image = "", images = [], video, documentUrl, pollOptions, likes, comments, createdAt, user }) => {
+    // Use Promise.all to resolve all promises from the map function
+    const posts = await Promise.all(allPosts.map(async ({ _id, postType, description = "", image = "", images = [], video, documentUrl, pollOptions, likes, comments, createdAt, user }) => {
       const { 
         _id: userId, 
         firstName: userFirstName, 
@@ -276,7 +278,10 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         designation: userDesignation, 
         investor, 
         startUp, 
-        isSubscribed: userIsSubscribed 
+        isSubscribed: userIsSubscribed,
+        connections: connections,
+        connectionsSent: connectionsSent,
+        connectionsReceived: connectionsReceived 
       } = user || {};
 
       const isLiked = likes.some(like => like._id == userIdd);
@@ -302,8 +307,25 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         ?.filter(option => option.votes.includes(userIdd))
         .map(option => option._id) || [];
 
-        const videos = video? video : "";
-        const documentUrls = documentUrl? documentUrl : "";
+      const videos = video ? video : "";
+      const documentUrls = documentUrl ? documentUrl : "";
+      
+      let connection_status;
+      //let connection_id;
+
+      if (connections.includes(userIdd)){
+        connection_status = "accepted"; // unfollow button -- done
+      }
+      else if(connectionsReceived.includes(userIdd)){
+        connection_status = "pending"; // cancel button 
+      }
+      else if(connectionsSent.includes(userIdd)){
+        connection_status = "pending"; // accept button 
+      }
+      else{
+        connection_status = "not_sent"; // follow button -- done
+      }
+
       return {
         postId: _id,
         postType,
@@ -312,8 +334,8 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         isSaved,
         isLiked,
         image: combinedImages,
-        video :videos,
-        documentUrl :documentUrls,
+        video: videos,
+        documentUrl: documentUrls,
         pollOptions: curatedPollOptions,
         myVotes,
         totalVotes,
@@ -327,7 +349,7 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
           userImage: comment.user.profilePicture,
           createdAt: timeAgo(comment.createdAt),
           likesCount: `${comment.likes.length}`,
-          isMyComment : comment.user._id == userIdd,
+          isMyComment: comment.user._id == userIdd,
           isLiked: comment.likes.some(like => like == userIdd)
         })),
         createdAt: timeAgo(createdAt),
@@ -338,8 +360,9 @@ export const allPostsDataPublic = async (userIdd , page, perPage) => {
         userDesignation: userDesignation || "",
         userCompany: startUp?.company || investor?.companyName || "",
         userIsSubscribed,
+        connection_status,
       };
-    });
+    }));
 
     return posts;
   } catch (error) {

@@ -13,8 +13,9 @@ import {
 //send connect request 
 export const sendConnectionRequestController = async (req, res) => {
   try {
-    const { senderId, receiverId } = req.body;
-    const response = await sendConnectionRequest(senderId, receiverId);
+    const senderId = req.userId
+    const { otherUserId } = req.params;
+    const response = await sendConnectionRequest(senderId, otherUserId);
     return res.send(response);
   } catch (error) {
     console.error(error);

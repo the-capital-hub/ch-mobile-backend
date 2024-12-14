@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-router.post("/sendConnectionRequest", sendConnectionRequestController);
+router.post("/sendConnectionRequest/:otherUserId", sendConnectionRequestController);
 router.get("/getSentPendingConnectionRequests", getSentPendingConnectionRequestsController);
 router.delete("/cancelConnectionRequest/:connectionId", cancelConnectionRequestController);
 // router.get("/getPendingConnectionRequests/:userId", getPendingConnectionRequestsController);

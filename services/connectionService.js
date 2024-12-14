@@ -72,6 +72,18 @@ export const sendConnectionRequest = async (senderId, receiverId) => {
   }
 };
 
+export const getConnectionRequestBetweenTwoPeople = async(userId, otherUserId, status) =>{
+      try{
+        const request = await ConnectionModel.find({
+        sender: userId,
+        receiver: otherUserId,
+        status: status
+      });
+      return request;
+    }catch(error){
+      console.log(error);
+    }
+}
 // get sent pending connections of a user
 export const getSentPendingConnectionRequests = async (userId) => {
   try {
