@@ -246,8 +246,8 @@ export const allPostsDataPublic = async (userIdd, page, perPage) => {
           path: "user",
           select: "firstName lastName designation profilePicture investor startUp oneLinkId isSubscribed",
           populate: [
-            { path: "investor", select: "companyName" },
-            { path: "startUp", select: "company" },
+            { path: "investor", select: "companyName location" },
+            { path: "startUp", select: "company location" },
           ],
         }, {
           path: "likes",
@@ -378,41 +378,21 @@ export const allPostsDataPublic = async (userIdd, page, perPage) => {
         }));
 
         resharedPostData = {
+          userProfilePicture: resharedUser?.profilePicture,
+          userDesignation: resharedUser?.designation || "",
+          userFirstName: resharedUser?.firstName,
+          userLastName: resharedUser?.lastName,
+          userLocation: resharedUser?.startUp ? resharedUser.startUp.location : resharedUser?.investor ? resharedUser.investor.location : "",
           postId: resharedId,
-          postType: resharedPostType,
-          isMyPost: resharedUser?._id == userIdd,
           description: resharedDescription,
-          isSaved: savedPostIds.includes(resharedId.toString()),
-          isLiked: resharedLikes.some(like => like._id == userIdd),
-          image: resharedCombinedImages,
-          video: resharedVideo || "",
-          documentUrl: resharedDocumentUrl || "",
+          images: resharedCombinedImages,
+          age: timeAgo(resharedCreatedAt),
           pollOptions: resharedCuratedPollOptions,
           myVotes: resharedPollOptions
             ?.filter(option => option.votes.includes(userIdd))
             .map(option => option._id) || [],
           totalVotes: resharedTotalVotes,
-          likes: resharedLikes,
-          comments: resharedComments.map(comment => ({
-            _id: comment._id,
-            text: comment.text,
-            user: `${comment.user.firstName} ${comment.user.lastName}`,
-            userDesignation: comment.user.designation || "",
-            userCompany: comment.user.investor?.companyName || comment.user.startUp?.company || "",
-            userImage: comment.user.profilePicture,
-            createdAt: timeAgo(comment.createdAt),
-            likesCount: `${comment.likes.length}`,
-            isMyComment: comment.user._id == userIdd,
-            isLiked: comment.likes.some(like => like == userIdd)
-          })),
-          createdAt: timeAgo(resharedCreatedAt),
-          userId: resharedUser?._id,
-          userFirstName: resharedUser?.firstName,
-          userLastName: resharedUser?.lastName,
-          userImage: resharedUser?.profilePicture,
-          userDesignation: resharedUser?.designation || "",
-          userCompany: resharedUser?.startUp?.company || resharedUser?.investor?.companyName || "",
-          userIsSubscribed: resharedUser?.isSubscribed
+         // resharedUser: resharedUser,
         };
       }
 
@@ -454,7 +434,6 @@ export const allPostsDataPublic = async (userIdd, page, perPage) => {
         resharedPostData
       };
     }));
-
     return posts;
   } catch (error) {
     console.error("Error fetching all posts:", error);
