@@ -29,6 +29,7 @@
     "fs": "^0.0.1-security",
     "googleapis": "^140.0.1",
     "gridfs-stream": "^1.1.1",
+    "inshorts-news-api": "^2.0.0",
     "jsonwebtoken": "^9.0.1",
     "moment": "^2.30.1",
     "mongodb": "^5.7.0",

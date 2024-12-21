@@ -1,5 +1,9 @@
 import axios from 'axios';
 import fetch from 'node-fetch';
+import inshorts from "inshorts-news-api";
+import Post from "../models/News.js";
+
+
 async function makeApiRequest(url) {
     try {
         const response = await axios.get(url);
@@ -204,4 +208,36 @@ export async function getTodaysNews(req, res) {
     }
 }
 
+
+// Get news from inshorts news api
+export const getNews = async (req, res) => {
+	try {
+		const newsData = await inshorts.getNews({
+			language: req.query.lang,
+			category: req.query.category,
+		});
+		res.json({
+			posts: new Post().fromDocuments(newsData.news),
+		});
+	} catch (error) {
+		res.json({ message: error.message });
+	}
+};
+
+export const getMoreNews = async (req, res) => {
+	try {
+		const newsData = await inshorts.getNews({
+			language: req.query.lang,
+			category: req.query.category,
+			news_offset: req.query.offset,
+		});
+		res.json({
+            status: true,
+            message:"News fetched",
+			data: new Post().fromDocuments(newsData.news)
+		});
+	} catch (error) {
+		res.json({ status : false, message: error.message, data:[] });
+	}
+};
 
