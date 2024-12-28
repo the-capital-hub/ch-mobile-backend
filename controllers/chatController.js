@@ -24,13 +24,13 @@ export const createChatController = async (req, res) => {
 
 export const getUserChatsController = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
     const response = await getUserChats(userId);
-    return res.status(response.status).send(response);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while getting user chats.",
     });
   }
@@ -52,13 +52,14 @@ export const findChatController = async (req, res) => {
 
 export const togglePinChatController = async (req, res) => {
   try {
-    const { userId, chatId } = req.params;
+    const userId = req.userId
+    const { chatId } = req.params;
     const response = await togglePinChat(userId, chatId);
-    return res.status(response.status).send(response);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while pinning/unpinning the chat.",
     });
   }

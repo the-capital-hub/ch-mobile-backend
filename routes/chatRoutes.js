@@ -15,9 +15,9 @@ const router = express.Router();
 router.use(authenticateToken);
 
 router.post("/createChat", createChatController);
-router.get("/getUserChats/:userId", getUserChatsController);
+router.get("/getUserChats", getUserChatsController);
 router.get("/findChat/:firstId/:secondId", findChatController);
-router.patch("/togglePin/:userId/:chatId", togglePinChatController);
+router.patch("/togglePin/:chatId", togglePinChatController);
 router.get("/getPinnedChat/:userId", getPinnedChatsController);
 router.get("/getChatSettings/:loggedUserId/:otherUserId/:chatId", getChatSettingsController);
 router.get("/getAllChats", getAllChatsController);
