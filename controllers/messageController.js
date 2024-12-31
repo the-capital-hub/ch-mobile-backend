@@ -24,7 +24,7 @@ const generateRandomId = () => {
 
 export const addMessageController = async (req, res) => {
   try {
-    const { chatId , sender_id, attachment_type, text, attachment_url } = req.body;
+    const { chatId , attachment_type, text, attachment_url } = req.body;
 
     // Generate a random ID for the message
     let id = generateRandomId(); // You need to implement this function
@@ -32,10 +32,7 @@ export const addMessageController = async (req, res) => {
     let documentName, documentUrl, image, video;
 
     
-    if (attachment_type === 'text') {
-      // Only text is provided
-      text = text || '';
-    } else if (attachment_type === 'image') {
+    if (attachment_type === 'image') {
       image = attachment_url;
     } else if (attachment_type === 'document') {
       documentUrl = attachment_url;
@@ -43,8 +40,9 @@ export const addMessageController = async (req, res) => {
     } else if (attachment_type === 'video') {
       video = attachment_url;
     }
+    
 
-    const response = await addMessage(id, chatId, sender_id, text, documentName, documentUrl, image, video);
+    const response = await addMessage(id, chatId, req.userId, text, documentName, documentUrl, image, video);
     return res.send(response);
   } catch (error) {
     console.error(error);
