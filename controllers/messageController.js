@@ -24,23 +24,21 @@ const generateRandomId = () => {
 
 export const addMessageController = async (req, res) => {
   try {
-    const { chatId , attachment_type, text, attachment_url } = req.body;
-
-    // Generate a random ID for the message
-    let id = generateRandomId(); // You need to implement this function
-
+    const { chatId, attachment_type, text, attachment_url } = req.body;
+    let id = generateRandomId();
     let documentName, documentUrl, image, video;
 
-    
-    if (attachment_type === 'image') {
-      image = attachment_url;
-    } else if (attachment_type === 'document') {
-      documentUrl = attachment_url;
-      documentName = attachment_url.split('/').pop(); 
-    } else if (attachment_type === 'video') {
-      video = attachment_url;
+    if (attachment_url) {
+      // Add appropriate data URI prefix based on attachment type
+      if (attachment_type === 'image') {
+        image = `data:image/png;base64,${attachment_url}`;
+      } else if (attachment_type === 'document') {
+        documentUrl = `data:application/pdf;base64,${attachment_url}`;
+        documentName = attachment_url.split('/').pop();
+      } else if (attachment_type === 'video') {
+        video = `data:video/mp4;base64,${attachment_url}`;
+      }
     }
-    
 
     const response = await addMessage(id, chatId, req.userId, text, documentName, documentUrl, image, video);
     return res.send(response);
@@ -48,7 +46,7 @@ export const addMessageController = async (req, res) => {
     console.error(error);
     return res.send({
       status: false,
-      message: "An error occurred while adding message.",
+      message: error,
     });
   }
 };

@@ -40,6 +40,14 @@ export const addMessage = async (id, chatId, senderId, text, documentName, docum
       });
       video = secure_url;
     }
+    if (documentUrl) {
+      const { secure_url } = await cloudinary.uploader.upload(documentUrl, {
+        folder: `${process.env.CLOUDIANRY_FOLDER}/posts/documents`,
+        resource_type: "auto",
+        unique_filename: true,
+      });
+      documentUrl = secure_url;
+    }
     const message = new MessageModel({
       id,
       chatId,
