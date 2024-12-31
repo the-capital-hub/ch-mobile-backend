@@ -12,6 +12,16 @@ import {
   getLastMessage,
 } from "../services/messageService.js";
 
+// Generate a random 8-character ID for messages (letters and numbers)
+const generateRandomId = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 export const addMessageController = async (req, res) => {
   try {
     const { chatId , sender_id, attachment_type, text, attachment_url } = req.body;
