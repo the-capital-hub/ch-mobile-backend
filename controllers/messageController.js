@@ -27,7 +27,7 @@ export const addMessageController = async (req, res) => {
     const { chatId , sender_id, attachment_type, text, attachment_url } = req.body;
 
     // Generate a random ID for the message
-    const id = generateRandomId(); // You need to implement this function
+    let id = generateRandomId(); // You need to implement this function
 
     let documentName, documentUrl, image, video;
 
