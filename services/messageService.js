@@ -2,6 +2,27 @@ import { MessageModel } from "../models/Message.js";
 import { ChatModel } from "../models/Chat.js";
 import { cloudinary } from "../utils/uploadImage.js";
 
+
+const formatMessageTime = (dateString) => {
+  const date = new Date(dateString);
+
+  // Define options for the time format
+  const options = {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true, // To get 12-hour format (AM/PM)
+  };
+
+  // Format the date and time
+  const formattedDate = date.toLocaleString('en-GB', options);
+  
+  // Replace the comma with ' ,'
+  return formattedDate.replace(',', ' ,');
+};
+
 export const addMessage = async (id, chatId, senderId, text, documentName, documentUrl, image, video) => {
   try {
     if (image) {
@@ -45,7 +66,7 @@ export const addMessage = async (id, chatId, senderId, text, documentName, docum
   }
 };
 
-export const getMessages = async (chatId, currentUserId) => {
+export const getMessages = async (chatId, userId) => {
   try {
     // Fetch messages with populated sender details
     const messages = await MessageModel.find({ chatId })
@@ -55,12 +76,47 @@ export const getMessages = async (chatId, currentUserId) => {
       })
       .exec();
 
-          const filteredMessages = messages.filter(message => !message.deletedBy.includes(currentUserId))
+    // Filter out messages deleted by the current user
+    const filteredMessages = messages.filter(message => !message.deletedBy.includes(userId));
+
+    // Map the messages to the required format
+    const formattedMessages = filteredMessages.map(message => {
+
+      let attachment_type = null;
+      let attachment_url = null;
+
+      if (message.image) {
+        attachment_type = 'image';
+        attachment_url = message.image;
+      } else if (message.documentUrl) {
+        attachment_type = 'document';
+        attachment_url = message.documentUrl;
+      } else if (message.video) {
+        attachment_type = 'video';
+        attachment_url = message.video;
+      }
+      else {
+        attachment_type = 'text';
+        attachment_url = '';
+          }
+
+
+      return {
+        sender_id: message.senderId._id.toString() === userId ? 'me' : message.senderId._id, 
+        // sender_name: `${message.senderId.firstName} ${message.senderId.lastName}`,
+        // sender_profilePicture: message.senderId.profilePicture,
+        text: message.text,
+        //is_my_message: message.senderId._id === userId, 
+        attachment_type, 
+        attachment_url,
+        timestamp: formatMessageTime(message.updatedAt)
+      };
+    });
 
     return {
       status: 200,
       message: "Messages retrieved successfully",
-      data: filteredMessages,
+      data: formattedMessages,
     };
   } catch (error) {
     console.log(error);
@@ -70,6 +126,7 @@ export const getMessages = async (chatId, currentUserId) => {
     };
   }
 };
+
 
 export const clearChat = async (chatId, userId) => {
   try {

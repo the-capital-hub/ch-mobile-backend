@@ -97,6 +97,7 @@ export const getUserChats = async (userId) => {
         chatId: chat._id,
         senderImage: sender?.profilePicture || '',
         senderName: sender?.firstName +" "+ sender?.lastName || '',
+        senderDesignation: sender?.designation || '',
         lastMessage: lastMessage?.text || '',
         unreadCount,
         lastMessageTime: formatLastMessageTime(lastMessage?.createdAt) || '',

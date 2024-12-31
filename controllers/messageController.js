@@ -29,8 +29,8 @@ export const addMessageController = async (req, res) => {
 export const getMessagesController = async (req, res) => {
   try {
     const { chatId } = req.params;
-    const {currentUserId} = req.body;
-    const response = await getMessages(chatId, currentUserId);
+    const userId = req.userId;
+    const response = await getMessages(chatId, userId);
     return res.status(response.status).send(response);
   } catch (error) {
     console.error(error);
