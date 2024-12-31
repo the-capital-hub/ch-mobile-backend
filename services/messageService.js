@@ -52,14 +52,14 @@ export const addMessage = async (id, chatId, senderId, text, documentName, docum
     });
     await message.save();
     return {
-      status: 200,
+      status: true,
       message: "New Message added",
       data: message,
     }
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding message.",
     };
   }
@@ -113,14 +113,14 @@ export const getMessages = async (chatId, userId) => {
     });
 
     return {
-      status: 200,
+      status: true,
       message: "Messages retrieved successfully",
       data: formattedMessages,
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting messages.",
     };
   }

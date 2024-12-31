@@ -14,13 +14,32 @@ import {
 
 export const addMessageController = async (req, res) => {
   try {
-    const { id, chatId, senderId, text, documentName, documentUrl, image, video } = req.body;
-    const response = await addMessage(id, chatId, senderId, text, documentName, documentUrl, image, video);
-    return res.status(response.status).send(response);
+    const { chatId , sender_id, attachment_type, text, attachment_url } = req.body;
+
+    // Generate a random ID for the message
+    const id = generateRandomId(); // You need to implement this function
+
+    let documentName, documentUrl, image, video;
+
+    
+    if (attachment_type === 'text') {
+      // Only text is provided
+      text = text || '';
+    } else if (attachment_type === 'image') {
+      image = attachment_url;
+    } else if (attachment_type === 'document') {
+      documentUrl = attachment_url;
+      documentName = attachment_url.split('/').pop(); 
+    } else if (attachment_type === 'video') {
+      video = attachment_url;
+    }
+
+    const response = await addMessage(id, chatId, sender_id, text, documentName, documentUrl, image, video);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while adding message.",
     });
   }
@@ -31,11 +50,11 @@ export const getMessagesController = async (req, res) => {
     const { chatId } = req.params;
     const userId = req.userId;
     const response = await getMessages(chatId, userId);
-    return res.status(response.status).send(response);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while getting messages.",
     });
   }
