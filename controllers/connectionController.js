@@ -8,6 +8,7 @@ import {
   cancelConnectionRequest,
   getSentPendingConnectionRequests,
   getRecommendations,
+  searchConnections,
 } from "../services/connectionService.js";
 
 //send connect request 
@@ -142,5 +143,20 @@ export const getRecommendationsController = async (req, res) => {
       status: false,
       message: "An error occurrecd while getting recommendations"
     })
+  }
+};
+
+export const searchConnectionsController = async (req, res) => {
+  try {
+    const  userId  = req.userId;
+    const { search } = req.query;
+    const response = await searchConnections(userId, search);
+    return res.send(response);
+  } catch (error) {
+    console.error(error);
+    return res.send({
+      status: false,
+      message: "An error occurred while searching connections.",
+    });
   }
 };

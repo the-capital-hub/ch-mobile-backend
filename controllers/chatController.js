@@ -10,13 +10,14 @@ import {
 
 export const createChatController = async (req, res) => {
   try {
-    const { senderId, recieverId } = req.body;
+    const senderId = req.userId;
+    const { recieverId } = req.body;
     const response = await createChat(senderId, recieverId);
-    return res.status(response.status).send(response);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while creating chat.",
     });
   }

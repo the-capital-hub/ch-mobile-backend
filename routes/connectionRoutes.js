@@ -9,6 +9,7 @@ import {
   cancelConnectionRequestController,
   getSentPendingConnectionRequestsController,
   getRecommendationsController,
+  searchConnectionsController,
 } from "../controllers/connectionController.js"; 
 import { authenticateToken } from "../middlewares/authenticateToken.js";
 const router = express.Router();
@@ -26,5 +27,7 @@ router.get("/getUserConnections/:userId", getUserConnectionsController);
 router.delete("/removeConnection/:otherUserId", removeConnectionController);
 
 router.get("/getRecommendations/:userId", getRecommendationsController);
+
+router.get("/searchConnections", searchConnectionsController);
 
 export default router;

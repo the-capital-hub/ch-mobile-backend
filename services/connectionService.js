@@ -526,3 +526,45 @@ export const getRecommendations = async (userId) => {
     };
   }
 };
+
+export const searchConnections = async (userId, searchQuery) => {
+  try {
+    const user = await UserModel.findById(userId).populate(
+      "connections",
+      "firstName lastName profilePicture designation"
+    );
+
+    if (!user) {
+      return {
+        status: false,
+        message: "User not found",
+      };
+    }
+
+    let connectionsData = user.connections.map(connection => ({
+      id: connection._id,
+      fullName: `${connection.firstName || ''} ${connection.lastName || ''}`.trim(),
+      profilePicture: connection.profilePicture || "",
+      designation: connection.designation || "",
+    }));
+
+    // Filter connections based on search query
+    if (searchQuery) {
+      connectionsData = connectionsData.filter(connection => 
+        connection.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return {
+      status: true,
+      message: "Connections searched successfully",
+      data: connectionsData,
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      status: false,
+      message: "An error occurred while searching connections.",
+    };
+  }
+};

@@ -25,14 +25,27 @@ const formatLastMessageTime = (dateString) => {
 
 export const createChat = async (senderId, recieverId) => {
   try {
+    // Find existing chat and populate receiver details
     const existingChat = await ChatModel.findOne({
       members: { $all: [senderId, recieverId] },
     });
+
+    // Get receiver details from UserModel
+    const receiverDetails = await UserModel.findById(recieverId).select('firstName lastName profilePicture designation');
 
     if (existingChat) {
       return {
         status: true,
         message: "Chat already exists",
+        data: {
+          chatId: existingChat._id,
+          senderName: receiverDetails.firstName + " " + receiverDetails.lastName,
+          senderImage: receiverDetails.profilePicture || "",
+          senderDesignation: receiverDetails.designation || "",
+          lastMessage: "",
+          unreadCount: 0,
+          lastMessageTime: ""
+        }
       };
     }
 
@@ -40,11 +53,20 @@ export const createChat = async (senderId, recieverId) => {
       members: [senderId, recieverId],
     });
     await newChat.save();
+
     return {
       status: true,
       message: "New Chat Created",
-      data: newChat,
-    }
+      data: {
+        chatId: newChat._id,
+        receiverName: receiverDetails.name,
+        receiverProfilePicture: receiverDetails.profilePicture,
+        receiverDesignation: receiverDetails.designation,
+        lastMessage: "",
+        unreadCount: 0,
+        lastMessageTime: ""
+      }
+    };
   } catch (error) {
     console.log(error);
     return {
