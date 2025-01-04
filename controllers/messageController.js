@@ -129,11 +129,11 @@ export const deleteMessageController = async (req, res) => {
   try {
     const { messageId } = req.params;
     const response = await deleteMessage(messageId);
-    return res.status(response.status).send(response);
+    return res.send(response);
   } catch (error) {
     console.error(error);
-    return res.status(500).send({
-      status: 500,
+    return res.send({
+      status: false,
       message: "An error occurred while deleting messages.",
     });
   }
