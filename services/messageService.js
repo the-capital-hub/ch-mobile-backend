@@ -59,19 +59,47 @@ export const addMessage = async (id, chatId, senderId, text, documentName, docum
       video
     });
     await message.save();
-    return {
-      status: true,
-      message: "New Message added",
-      data: message,
+      // Formatting the response to match the 'getMessages' structure
+      let attachment_type = null;
+      let attachment_url = null;
+  
+      if (image) {
+        attachment_type = 'image';
+        attachment_url = image;
+      } else if (documentUrl) {
+        attachment_type = 'document';
+        attachment_url = documentUrl;
+      } else if (video) {
+        attachment_type = 'video';
+        attachment_url = video;
+      } else {
+        attachment_type = 'text';
+        attachment_url = '';
+      }
+  
+      // Prepare the formatted message response
+      const formattedMessage = {
+        message_id: message._id,
+        sender_id: 'me',
+        text: message.text,
+        attachment_type,
+        attachment_url,
+        timestamp: formatMessageTime(message.updatedAt)
+      };
+  
+      return {
+        status: true,
+        message: "New message added successfully",
+        data: formattedMessage,
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        status: false,
+        message: "An error occurred while adding message.",
+      };
     }
-  } catch (error) {
-    console.log(error);
-    return {
-      status: false,
-      message: "An error occurred while adding message.",
-    };
-  }
-};
+  };
 
 export const getMessages = async (chatId, userId) => {
   try {
@@ -225,8 +253,7 @@ export const clearAllMessages = async (chatId) => {
 
 export const deleteMessage = async (messageId) => {
   try {
-    const deletedMessage = await MessageModel.findOneAndDelete({ id: messageId });
-
+    const deletedMessage = await MessageModel.findOneAndDelete({ _id: messageId });
     if (!deletedMessage) {
       return {
         status: false,
