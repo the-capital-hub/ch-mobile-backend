@@ -24,10 +24,9 @@ import {
   updateExperience,
   deleteEducation,
   deleteExperience,
-  blockUser,
   getUserByIdBody,
-  unblockUser,
   getProfilePosts,
+  toggleUserBlockStatus,
 } from "../services/userService.js";
 
 import { sendMail } from "../utils/mailHelper.js";
@@ -1080,5 +1079,17 @@ export const getProfilePostsController = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.send({ status: false, message: "An error occurred while getting profile posts.", data: {} });
+  }
+};
+
+export const toggleUserBlockController = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const {targetUserId } = req.body;
+    const response = await toggleUserBlockStatus(userId, targetUserId);
+    return res.send(response);
+  } catch (error) {
+    console.log("Error during toggling user block status", error);
+    res.json({ status: false, message: "Internal Server Error" });
   }
 };

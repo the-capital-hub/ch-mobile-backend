@@ -70,7 +70,7 @@ export const getUserByUserName = async (username) => {
     if (!username) {
       console.log("No username provided.");
       return {
-        status: 404,
+        status: false,
         message: "No user exists",
       };
     }
@@ -81,20 +81,20 @@ export const getUserByUserName = async (username) => {
     if (!response) {
       console.log(`No user found with username: ${username}`);
       return {
-        status: 404,
+        status: false,
         message: "No user exists",
       };
     }
 
     console.log(`User found: ${response}`);
     return {
-      status: 200,
+      status: true,
       message: response,
     };
   } catch (error) {
     console.error("An error occurred while finding the user", error);
     return {
-      status: 500,
+      status: false,
       message: "Internal server error",
     };
   }
@@ -132,7 +132,7 @@ export const getUserById = async (userId) => {
     }
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
@@ -322,7 +322,7 @@ export const getUserById = async (userId) => {
   } catch (error) {
     console.error("Error getting user:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting the user.",
     };
   }
@@ -372,93 +372,56 @@ export const updateUserData = async ({ userId, newData }) => {
   }
 };
 
-//blockuser
-export const blockUser = async (userId, blockedUserId) => {
+// Toggle block/unblock user
+export const toggleUserBlockStatus = async (userId, targetUserId) => {
   try {
-    // Find the user who wants to block another user
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
 
     // Check if the user is trying to block themselves
-    if (userId === blockedUserId) {
+    if (userId === targetUserId) {
       return {
-        status: 400,
-        message: "Cannot block yourself",
+        status: false,
+        message: "Cannot block/unblock yourself",
       };
     }
 
-    // Add the blockedUserId to the user's blocked list
-    if (!user.blockedUsers.includes(blockedUserId)) {
-      user.blockedUsers.push(blockedUserId);
+    // Check if the target user is already blocked
+    const isBlocked = user.blockedUsers.includes(targetUserId);
+    
+    if (isBlocked) {
+      // Unblock the user
+      await UserModel.findByIdAndUpdate(
+        userId,
+        { $pull: { blockedUsers: targetUserId } },
+        { new: true }
+      );
+      return {
+        status: true,
+        message: "User unblocked successfully",
+      };
+    } else {
+      // Block the user
+      user.blockedUsers.push(targetUserId);
       await user.save();
+      return {
+        status: true,
+        message: "User blocked successfully",
+      };
     }
-
-    return {
-      status: 200,
-      message: "User blocked successfully",
-    };
   } catch (error) {
-    console.error("Error blocking user:", error);
+    console.error("Error toggling user block status:", error);
     return {
-      status: 500,
-      message: "An error occurred while blocking the user.",
+      status: false,
+      message: "An error occurred while toggling the user block status.",
     };
   }
 };
-
-
-export const unblockUser = async (userId, unblockUserId) => {
-  try {
-    // Find the user who wants to unblock the blocked user
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return {
-        status: 404,
-        message: "User not found",
-      };
-    }
-
-    // Check if the user is trying to unblock themselves
-    if (userId === unblockUserId) {
-      return {
-        status: 400,
-        message: "Cannot unblock yourself",
-      };
-    }
-
-    // Check if the id belongs to the blocked list
-    if (!user.blockedUsers.includes(unblockUserId)) {
-      return {
-        status: 404,
-        message: "The user is already unblocked",
-      };
-    }
-
-    // Remove unblockUserId from blockedUsers array and update the document
-    await UserModel.findByIdAndUpdate(
-      userId,
-      { $pull: { blockedUsers: unblockUserId } },
-      { new: true }
-    );
-
-    return {
-      status: 200,
-      message: "User unblocked successfully",
-    };
-  } catch (error) {
-    console.error("Error unblocking user:", error);
-    return {
-      status: 500,
-      message: "An error occurred while unblocking the user.",
-    };
-  }
-};
-
 
 //get User by id with request body
 export const getUserByIdBody = async (userId) => {
@@ -466,19 +429,19 @@ export const getUserByIdBody = async (userId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "User details retrieved successfully.",
       data: user,
     };
   } catch (error) {
     console.error("Error getting user:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting the user.",
     };
   }
@@ -494,19 +457,19 @@ export const getStartUpData = async (userId) => {
     const startUp = await StartUpModel.findOne({ founderId: userId });
     if (!startUp) {
       return {
-        status: 404,
+        status: false,
         message: "StartUp not found.",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "StartUp details retrieved successfully.",
       data: startUp,
     };
   } catch (error) {
     console.error("Error getting StartUp:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting the StartUp.",
     };
   }
@@ -535,19 +498,19 @@ export const changePassword = async (userId, { newPassword, oldPassword }) => {
     const checkPassword = bcrypt.compare(oldPassword, user.password);
     if (!checkPassword) {
       return {
-        status: 401,
+        status: false,
         message: "Invalid Password",
       };
     }
     user.password = await hashPassword(newPassword);
     await user.save();
     return {
-      status: 200,
+      status: true,
       message: "Password Changed Successfully",
     };
   } catch (error) {
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while updating the password.",
     };
   }
@@ -558,7 +521,7 @@ export const requestPasswordReset = async (email) => {
     const user = await UserModel.findOne({ email });
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User Not Found",
       };
     }
@@ -593,21 +556,21 @@ export const requestPasswordReset = async (email) => {
       subject,
       resetPasswordMessage
     );
-    if (response.status === 200) {
+    if (response.status === true) {
       return {
-        status: 200,
+        status: true,
         message: "Password reset email sent successfully",
       };
     } else {
       return {
-        status: 500,
+        status: false,
         message: "Error sending password reset email",
       };
     }
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "Error requesting password reset",
     };
   }
@@ -619,27 +582,27 @@ export const resetPassword = async (token, newPassword) => {
     const decodedToken = jwt.verify(token, secretKey);
     if (!decodedToken || !decodedToken.userId) {
       return {
-        status: 400,
+        status: false,
         message: "Invalid or expired reset token",
       };
     }
     const user = await UserModel.findById(decodedToken.userId);
     if (!user) {
       return {
-        status: 400,
+        status: false,
         message: "User not found",
       };
     }
     user.password = newPassword;
     await user.save();
     return {
-      status: 200,
+      status: true,
       message: "Password reset successfully",
     };
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "Error resetting password",
     };
   }
@@ -690,7 +653,7 @@ export const searchUsers = async (searchQuery) => {
     ]);
 
     return {
-      status: 200,
+      status: true,
       data: {
         users: users,
         company: company.concat(investor),
@@ -699,7 +662,7 @@ export const searchUsers = async (searchQuery) => {
   } catch (error) {
     console.error("Error searching for users:", error);
     return {
-      status: 500,
+      status: false,
       message: "Error searching for users",
     };
   }
@@ -711,7 +674,7 @@ export const addEducation = async (userId, educationData) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -726,14 +689,14 @@ export const addEducation = async (userId, educationData) => {
     user.recentEducation.push(educationData);
     await user.save();
     return {
-      status: 200,
+      status: true,
       message: "Education added",
       data: user,
     };
   } catch (error) {
     console.error("Error adding recent education:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding education.",
     };
   }
@@ -745,7 +708,7 @@ export const addExperience = async (userId, experienceData) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -760,14 +723,14 @@ export const addExperience = async (userId, experienceData) => {
     user.recentExperience.push(experienceData);
     await user.save();
     return {
-      status: 200,
+      status: true,
       message: "Experience added",
       data: user,
     };
   } catch (error) {
     console.error("Error adding recent experience:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding experience.",
     };
   }
@@ -819,19 +782,19 @@ export const addUserAsInvestor = async (userId, investorId) => {
     );
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "Investor added to user successfully.",
       data: user,
     };
   } catch (error) {
     console.error("Error adding user as investor:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding user as investor.",
     };
   }
@@ -1177,7 +1140,7 @@ export const getExploreFilters = async (type) => {
       // const founderSectors = await StartUpModel.distinct("sector");
       const founderCities = await StartUpModel.distinct("location");
       return {
-        status: 200,
+        status: true,
         message: "Founder filters retrieved",
         data: {
           // sectors: founderSectors,
@@ -1203,7 +1166,7 @@ export const validateSecretKey = async ({ oneLinkId, secretOneLinkKey }) => {
 
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -1211,7 +1174,7 @@ export const validateSecretKey = async ({ oneLinkId, secretOneLinkKey }) => {
     if (!user.secretKey) {
       const token = jwt.sign({}, secretKey, { expiresIn: "1h" });
       return {
-        status: 200,
+        status: true,
         message: "Secret key is valid",
         token,
       };
@@ -1220,20 +1183,20 @@ export const validateSecretKey = async ({ oneLinkId, secretOneLinkKey }) => {
     if (secretOneLinkKey === user.secretKey) {
       const token = jwt.sign({}, secretKey, { expiresIn: "1h" });
       return {
-        status: 200,
+        status: true,
         message: "Secret key is valid",
         token,
       };
     } else {
       return {
-        status: 401,
+        status: false,
         message: "Invalid secret key",
       };
     }
   } catch (error) {
     console.error("Error validating secret key:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while validating the secret key.",
     };
   }
@@ -1273,7 +1236,7 @@ export const googleLogin = async (credential) => {
     const user = await UserModel.findOne({ email: email });
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found.",
       }
     }
@@ -1283,7 +1246,7 @@ export const googleLogin = async (credential) => {
     );
     user.password = undefined;
     return {
-      status: 200,
+      status: true,
       message: "Google Login successfull",
       data: user,
       token: token,
@@ -1291,7 +1254,7 @@ export const googleLogin = async (credential) => {
   } catch (error) {
     console.error("Error login:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while login using google.",
     };
   }
@@ -1303,14 +1266,14 @@ export const updateEducation = async (userId, educationId, updatedData) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
     const education = user.recentEducation.id(educationId);
     if (!education) {
       return {
-        status: 404,
+        status: false,
         message: "Education entry not found",
       };
     }
@@ -1327,14 +1290,14 @@ export const updateEducation = async (userId, educationId, updatedData) => {
     await user.save();
 
     return {
-      status: 200,
+      status: true,
       message: "Education updated",
       data: user.recentEducation,
     };
   } catch (error) {
     console.error("Error updating education:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while updating education.",
     };
   }
@@ -1346,7 +1309,7 @@ export const deleteEducation = async (userId, educationId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -1355,14 +1318,14 @@ export const deleteEducation = async (userId, educationId) => {
     );
     await user.save();
     return {
-      status: 200,
+      status: true,
       message: "Education deleted",
       data: user.recentEducation,
     };
   } catch (error) {
     console.error("Error deleting education:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while deleting education.",
     };
   }
@@ -1374,14 +1337,14 @@ export const updateExperience = async (userId, experienceId, updatedData) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
     const experience = user.recentExperience.id(experienceId);
     if (!experience) {
       return {
-        status: 404,
+        status: false,
         message: "Experience entry not found",
       };
     }
@@ -1398,14 +1361,14 @@ export const updateExperience = async (userId, experienceId, updatedData) => {
     await user.save();
 
     return {
-      status: 200,
+      status: true,
       message: "Experience updated",
       data: user.recentExperience,
     };
   } catch (error) {
     console.error("Error updating experience:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while updating experience.",
     };
   }
@@ -1416,7 +1379,7 @@ export const deleteExperience = async (userId, experienceId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
@@ -1425,14 +1388,14 @@ export const deleteExperience = async (userId, experienceId) => {
     );
     await user.save();
     return {
-      status: 200,
+      status: true,
       message: "Experience deleted",
       data: user.recentExperience,
     };
   } catch (error) {
     console.error("Error deleting experience:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while deleting experience.",
     };
   }

@@ -22,12 +22,12 @@ router.post("/addMessage", addMessageController);
 router.get("/getMessages/:chatId", getMessagesController);
 router.patch("/markMessagesAsRead/:chatId/:userId", markMessagesAsReadController);
 router.get("/getUnreadMessageCount/:chatId/:userId", getUnreadMessageCountController);
-router.patch("/clearChatMessages/:chatId", clearAllMessagesController);
+router.delete("/clearChatMessages/:chatId", clearAllMessagesController);
 router.delete("/deleteMessage/:messageId", deleteMessageController);
 router.patch("/markMessagesAsReadInCommunities/:chatId/:userId", markMessagesAsReadInCommunitiesController);
 router.get("/getUnreadMessageCountInCommunities/:chatId/:userId", getUnreadMessageCountInCommunitiesController);
 router.get("/getAllUnreadMessageCount/:userId", getUnreadMessageCountInCommunitiesController);
-router.post("/clearChat/:chatId", clearChatController);
+router.delete("/clearChat/:chatId", clearChatController);
 router.get("/getLastMessage/:chatId", getLastMessageController);
 
 

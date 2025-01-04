@@ -113,15 +113,20 @@ export const getUserChats = async (userId) => {
     const chatDetails = allChats.map((chat, index) => {
       const lastMessage = lastMessages[index];
       const unreadCount = unreadCounts[index];
-      const sender = chat.members.find(member => member._id.toString() !== userId.toString()); // Find the sender (not the user itself)
+      const sender = chat.members.find(member => member._id.toString() !== userId.toString());
 
+      const isBlockedByMe = user?.blockedUsers?.includes(sender._id);
+      const isBlockedBySender = sender?.blockedUsers?.some(id => id.equals(userId))
       return {
         chatId: chat._id,
+        sender_id: sender?._id,
         senderImage: sender?.profilePicture || '',
         senderName: sender?.firstName +" "+ sender?.lastName || '',
         senderDesignation: sender?.designation || '',
         lastMessage: lastMessage?.text || '',
         unreadCount,
+        is_blocked_by_me: isBlockedByMe,
+        is_blocked_by_other_user: isBlockedBySender || false,
         lastMessageTime: formatLastMessageTime(lastMessage?.createdAt) || '',
       };
     });
@@ -318,135 +323,6 @@ export const getChatSettings = async (loggedUserId, otherUserId, chatId) => {
     };
   }
 };
-
-
-// export const getAllChats = async (userId) => {
-//   try {
-
-//     // all chat
-//     const user = await UserModel.findById(userId);
-//     const pinnedChatIds = user.pinnedChat;
-
-//     const chats = await ChatModel.find({
-//       members: { $in: [userId] },
-//       _id: { $nin: pinnedChatIds },
-//     }).lean().populate('members');
-
-//     const chatIds = chats.map(chat => chat._id);
-
-//     const lastMessagesPromises = chatIds.map(chatId =>
-//       MessageModel.findOne({ chatId }).sort({ createdAt: -1 }).limit(1).lean()
-//     );
-
-//     const lastMessages = await Promise.all(lastMessagesPromises);
-
-//     const chatDetails = chats.map((chat, index) => {
-//       return {
-//         chat,
-//         lastMessage: lastMessages[index],
-//       };
-//     });
-
-//     chatDetails.sort((a, b) => {
-//       if (a.lastMessage && b.lastMessage) {
-//         return b.lastMessage.createdAt - a.lastMessage.createdAt;
-//       } else if (a.lastMessage) {
-//         return -1;
-//       } else if (b.lastMessage) {
-//         return 1;
-//       }
-//       return 0;
-//     });
-
-//     //pinned chat
-//     const _user = await UserModel.findById(userId)
-//       .populate({
-//         path: "pinnedChat",
-//         populate: {
-//           path: "members",
-//           model: "Users"
-//         }
-//       })
-//       .lean();
-
-//     const _pinnedChatIds = _user.pinnedChat.map(chat => chat._id);
-
-//     const _lastMessagesPromises = _pinnedChatIds.map(chatId =>
-//       MessageModel.findOne({ chatId }).sort({ createdAt: -1 }).limit(1).lean()
-//     );
-
-//     const _lastMessages = await Promise.all(_lastMessagesPromises);
-
-//     const pinnedChatDetails = _user.pinnedChat.map((chat, index) => {
-//       return {
-//         chat,
-//         lastMessage: _lastMessages[index],
-//       };
-//     });
-
-//     pinnedChatDetails.sort((a, b) => {
-//       if (a.lastMessage && b.lastMessage) {
-//         return b.lastMessage.createdAt - a.lastMessage.createdAt;
-//       } else if (a.lastMessage) {
-//         return -1;
-//       } else if (b.lastMessage) {
-//         return 1;
-//       }
-//       return 0;
-//     });
-
-//     // communities 
-//     const communities = await CommunityModel.find({ members: userId })
-//       .populate({
-//         path: "members",
-//         model: "Users",
-//         select: "firstName lastName profilePicture",
-//       })
-//       .lean();
-
-//     const _chatIds = communities.map(chat => chat._id);
-
-//     const clastMessagesPromises = _chatIds.map(chatId =>
-//       MessageModel.findOne({ chatId }).sort({ createdAt: -1 }).limit(1).lean()
-//     );
-
-//     const clastMessages = await Promise.all(clastMessagesPromises);
-
-//     const _chatDetails = communities.map((chat, index) => {
-//       return {
-//         chat,
-//         lastMessage: clastMessages[index],
-//       };
-//     });
-
-//     _chatDetails.sort((a, b) => {
-//       if (a.lastMessage && b.lastMessage) {
-//         return b.lastMessage.createdAt - a.lastMessage.createdAt;
-//       } else if (a.lastMessage) {
-//         return -1;
-//       } else if (b.lastMessage) {
-//         return 1;
-//       }
-//       return 0;
-//     });
-
-//     return {
-//       status: true,
-//       data: {
-//         allChats: chatDetails.map((chatDetail) => chatDetail.chat),
-//         pinnedChat: pinnedChatDetails.map((chatDetail) => chatDetail.chat),
-//         communities: _chatDetails.map((chatDetail) => chatDetail.chat),
-//       }
-//     }
-
-//   } catch (error) {
-//     console.error(error);
-//     return {
-//       status: false,
-//       message: "An error occurred while getting chats.",
-//     };
-//   }
-// };
 
 export const getAllChats = async (userId) => {
   try {

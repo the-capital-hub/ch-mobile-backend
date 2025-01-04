@@ -109,16 +109,16 @@ export const getMessages = async (chatId, userId) => {
 
 
       return {
+        message_id: message._id,
         sender_id: message.senderId._id.toString() === userId ? 'me' : message.senderId._id, 
-        // sender_name: `${message.senderId.firstName} ${message.senderId.lastName}`,
-        // sender_profilePicture: message.senderId.profilePicture,
         text: message.text,
-        //is_my_message: message.senderId._id === userId, 
         attachment_type, 
         attachment_url,
         timestamp: formatMessageTime(message.updatedAt)
       };
     });
+
+    markMessagesAsRead(chatId, userId);
 
     return {
       status: true,
@@ -143,6 +143,10 @@ export const clearChat = async (chatId, userId) => {
       { $addToSet: { deletedBy: userId } } 
     );
     console.log('Chat cleared successfully');
+    return {
+      status: true, 
+      message: "Chat cleared successfully"
+    }
   } catch (error) {
     console.error('Error clearing chat:', error);
   }
@@ -156,19 +160,19 @@ export const markMessagesAsRead = async (chatId, userId) => {
     );
     if (result.nModified > 0) {
       return {
-        status: 200,
+        status: true,
         message: "All messages in the chat have been marked as read.",
       };
     } else {
       return {
-        status: 200,
+        status: true,
         message: "No messages found in the chat to mark as read.",
       };
     }
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while marking messages as read.",
     };
   }
@@ -182,14 +186,14 @@ export const getUnreadMessageCount = async (chatId, userId) => {
       read: false,
     });
     return {
-      status: 200,
+      status: true,
       message: "Unread message count retrieved successfully",
       data: unreadCount,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting unread message count.",
     };
   }
@@ -201,19 +205,19 @@ export const clearAllMessages = async (chatId) => {
 
     if (result.deletedCount > 0) {
       return {
-        status: 200,
+        status: true,
         message: "All messages in the chat have been cleared.",
       };
     } else {
       return {
-        status: 200,
+        status: true,
         message: "No messages found in the chat to clear.",
       };
     }
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while clearing messages.",
     };
   }
@@ -225,20 +229,20 @@ export const deleteMessage = async (messageId) => {
 
     if (!deletedMessage) {
       return {
-        status: 404,
+        status: false,
         message: "Message not found",
       };
     }
 
     return {
-      status: 200,
+      status: true,
       message: "Message deleted successfully",
       data: deletedMessage,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while deleting the message.",
     };
   }
@@ -252,19 +256,19 @@ export const markMessagesAsReadInCommunities = async (chatId, userId) => {
     );
     if (result.nModified > 0) {
       return {
-        status: 200,
+        status: true,
         message: "Messages marked as read by the community",
       };
     } else {
       return {
-        status: 200,
+        status: true,
         message: "No messages found to mark as read by the community",
       };
     }
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while marking messages as read by the community.",
     };
   }
@@ -278,14 +282,14 @@ export const getUnreadMessageCountInCommunities = async (chatId, userId) => {
       readBy: { $ne: userId },
     });
     return {
-      status: 200,
+      status: true,
       message: "Unread message count in community retrieved successfully",
       data: unreadCount,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting unread message count.",
     };
   }
@@ -330,14 +334,14 @@ export const getAllUnreadMessageCountsForUser = async (userId) => {
 
     // Return the result
     return {
-      status: 200,
+      status: true,
       message: "Total unread message count retrieved successfully",
       data: totalUnreadCount,
     };
   } catch (error) {
     console.error("Error getting total unread message counts:", error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting total unread message counts.",
     };
   }
@@ -348,19 +352,19 @@ export const getLastMessage = async (chatId) => {
     const lastMessage = await MessageModel.findOne({ chatId }).sort({ createdAt: -1 }).populate('senderId');
     if (!lastMessage) {
       return {
-        status: 404,
+        status: false,
         message: "No messages found in the chat",
       };
     }
     return {
-      status: 200,
+      status: true,
       message: "Last message retrieved successfully",
       data: lastMessage,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting the last message.",
     };
   }

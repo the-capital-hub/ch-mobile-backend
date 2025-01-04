@@ -70,13 +70,13 @@ export const clearChatController = async (req,res) => {
 
   try{
     const {chatId} = req.params;
-  const {userId} = req.body;
+  const userId = req.userId;
   const response = await clearChat(chatId, userId);
-  return res.status(response.status).send(response);
+  return res.send(response);
 } catch (error) {
   console.error(error, error.message);
-  return res.status(500).send({
-    status: 500,
+  return res.send({
+    status: false,
     message: "An error occurred while clearing messages.",
   });
 }

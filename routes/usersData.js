@@ -36,7 +36,8 @@ import {
   getUsersByUserNameController,
   unblockUserController,
   resendOtp,
-  getProfilePostsController
+  getProfilePostsController,
+  toggleUserBlockController
 } from "../controllers/userData.js";
 
 import { authenticateToken } from "../middlewares/authenticateToken.js";
@@ -118,4 +119,5 @@ router.post("/createSecretKey", createSecretKeyController);
 //get profile posts
 router.get("/getProfilePosts/:type", getProfilePostsController);
 
+router.post("/toggleUserBlock", toggleUserBlockController);
 export default router;
