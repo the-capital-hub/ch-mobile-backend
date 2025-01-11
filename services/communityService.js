@@ -3,10 +3,19 @@ import { cloudinary } from "../utils/uploadImage.js";
 import { MessageModel } from "../models/Message.js";
 import { UserModel } from "../models/User.js";
 
-export const createCommunity = async (communitydata) => {
+const base64ToBuffer = (base64String) => {  
+  const buffer = Buffer.from(base64String, 'base64');
+  return buffer
+};
+
+export const createCommunity = async (communitydata, adminId) => {
   try {
     if (communitydata.profileImage) {
-      const { secure_url } = await cloudinary.uploader.upload(communitydata.profileImage, {
+
+      
+      const imageBuffer = base64ToBuffer(image);
+      const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
+      const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
         folder: `${process.env.CLOUDIANRY_FOLDER}/posts/images`,
         format: "webp",
         unique_filename: true,
@@ -17,17 +26,18 @@ export const createCommunity = async (communitydata) => {
     const newCommunity = new CommunityModel({
       ...communitydata,
       members: members,
+      adminId: adminId,
     });
     await newCommunity.save();
     return {
-      status: 200,
+      status: true,
       message: "New Community Created",
       data: newCommunity,
     }
   } catch (error) {
     console.log(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while creating community.",
     };
   }
@@ -39,20 +49,20 @@ export const getCommunityById = async (communityId) => {
 
     if (!community) {
       return {
-        status: 404,
+        status: false,
         message: 'Community not found',
       };
     }
 
     return {
-      status: 200,
+      status: true,
       message: 'Community retrieved successfully',
       data: community,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: 'An error occurred while retrieving the community.',
     };
   }
@@ -64,47 +74,32 @@ export const getAllCommunitiesByUserId = async (userId) => {
       .populate({
         path: "members",
         model: "Users",
-        select: "firstName lastName profilePicture oneLinkId",
+        select: "firstName lastName profilePicture",
       })
       .lean();
 
-    const chatIds = communities.map(chat => chat._id);
-
-    const lastMessagesPromises = chatIds.map(chatId =>
-      MessageModel.findOne({ chatId }).sort({ createdAt: -1 }).limit(1).lean()
-    );
-
-    const lastMessages = await Promise.all(lastMessagesPromises);
-
-    const chatDetails = communities.map((chat, index) => {
-      return {
-        chat,
-        lastMessage: lastMessages[index],
-      };
-    });
-
-    chatDetails.sort((a, b) => {
-      if (a.lastMessage && b.lastMessage) {
-        return b.lastMessage.createdAt - a.lastMessage.createdAt;
-      } else if (a.lastMessage) {
-        return -1;
-      } else if (b.lastMessage) {
-        return 1;
-      }
-      return 0;
-    });
+    const formattedCommunities = communities.map(community => ({
+      communityId: community._id || "",
+      communityName: community.communityName || "",
+      memberCount: community.members?.length || 0,
+      memberProfileImages: community.members?.map(member => member.profilePicture || "") || [],
+      memberNames: community.members?.map(member => 
+        `${member.firstName || ""} ${member.lastName || ""}`.trim() || ""
+      ) || []
+    }));
 
     return {
-      status: 200,
+      status: true,
       message: 'Communities retrieved successfully',
-      data: chatDetails.map((chatDetail) => chatDetail.chat),
+      data: formattedCommunities,
     };
 
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: 'An error occurred while retrieving communities.',
+      data: [],
     };
   }
 };
@@ -130,7 +125,7 @@ export const getCommunitySettings = async (communityId) => {
     const media = mediaMessages.filter(message => message.image || message.video);
 
     return {
-      status: 200,
+      status: true,
       message: "Community settings retrieved successfully.",
       data: {
         community,
@@ -143,7 +138,7 @@ export const getCommunitySettings = async (communityId) => {
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while getting community settings.",
     };
   }
@@ -156,7 +151,7 @@ export const updateCommunity = async (communityId, updatedData) => {
 
     if (!community) {
       return {
-        status: 404,
+        status: false,
         message: 'Community not found',
       };
     }
@@ -177,14 +172,14 @@ export const updateCommunity = async (communityId, updatedData) => {
     await community.save();
 
     return {
-      status: 200,
+      status: true,
       message: 'Community updated successfully',
       data: community,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: 'An error occurred while updating the community',
     };
   }
@@ -196,7 +191,7 @@ export const exitCommunity = async (userId, communityId) => {
 
     if (!community) {
       return {
-        status: 404,
+        status: false,
         message: "Community not found",
       };
     }
@@ -204,7 +199,7 @@ export const exitCommunity = async (userId, communityId) => {
 
     if (!isMember) {
       return {
-        status: 400,
+        status: false,
         message: "User is not a member of the community",
       };
     }
@@ -212,13 +207,13 @@ export const exitCommunity = async (userId, communityId) => {
     await community.save();
 
     return {
-      status: 200,
+      status: true,
       message: "User has exited the community",
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while exiting the community",
     };
   }
@@ -229,14 +224,14 @@ export const getUnAddedMembers = async (userId, communityId) => {
     const user = await UserModel.findById(userId);
     if (!user) {
       return {
-        status: 404,
+        status: false,
         message: "User not found",
       };
     }
     const community = await CommunityModel.findById(communityId);
     if (!community) {
       return {
-        status: 404,
+        status: false,
         message: "Community not found",
       };
     }
@@ -249,14 +244,14 @@ export const getUnAddedMembers = async (userId, communityId) => {
     }).select("firstName lastName profilePicture oneLinkId");
 
     return {
-      status: 200,
+      status: true,
       message: "Unadded members retrieved successfully",
       data: unAddedMembersInfo,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while retrieving unadded members",
       data: [],
     };
@@ -268,43 +263,43 @@ export const addMembersToCommunity = async (communityId, memberIds) => {
     const community = await CommunityModel.findById(communityId);
     if (!community) {
       return {
-        status: 404,
+        status: false,
         message: "Community not found",
       };
     }
     community.members = [...new Set([...community.members, ...memberIds])];
     await community.save();
     return {
-      status: 200,
+      status: true,
       message: "Members added to the community successfully",
       data: community,
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: "An error occurred while adding members to the community",
     };
   }
-};
+};  
 
 export const deleteCommunity = async (communityId, userId) => {
   try {
     const community = await CommunityModel.findOneAndDelete({ _id: communityId, adminId: userId });
     if (!community) {
       return {
-        status: 403,
+        status: false,
         message: 'You are not authorized to delete this community',
       };
     }
     return {
-      status: 200,
+      status: true,
       message: 'Community deleted successfully',
     };
   } catch (error) {
     console.error(error);
     return {
-      status: 500,
+      status: false,
       message: 'An error occurred while deleting the community',
     };
   }

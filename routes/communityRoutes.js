@@ -18,7 +18,7 @@ router.use(authenticateToken);
 
 router.post("/createCommunity", createCommunityController);
 router.get("/getCommunityById/:communityId", getCommunityByIdController);
-router.get("/getAllCommunitiesByUserId/:userId", getAllCommunitiesByUserIdController);
+router.get("/getAllCommunitiesByUserId", getAllCommunitiesByUserIdController);
 router.get("/getCommunitySettings/:communityId", getCommunitySettingsController);
 router.patch("/updateCommunity/:communityId", updateCommunityController);
 router.patch("/exitCommunity/:communityId/:userId", exitCommunityController);
