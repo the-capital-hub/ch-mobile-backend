@@ -13,7 +13,7 @@ export const createCommunity = async (communitydata, adminId) => {
     if (communitydata.profileImage) {
 
       
-      const imageBuffer = base64ToBuffer(image);
+      const imageBuffer = base64ToBuffer(profileImage);
       const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
       const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
         folder: `${process.env.CLOUDIANRY_FOLDER}/posts/images`,
