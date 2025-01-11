@@ -79,6 +79,8 @@ export const getAllCommunitiesByUserId = async (userId) => {
       .lean();
 
     const formattedCommunities = communities.map(community => ({
+      communityImage: community.profileImage || "",
+      communityDescription: community.description || "",
       communityId: community._id || "",
       communityName: community.communityName || "",
       memberCount: community.members?.length || 0,
