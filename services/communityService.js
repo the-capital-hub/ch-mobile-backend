@@ -76,7 +76,8 @@ export const getAllCommunitiesByUserId = async (userId) => {
         model: "Users",
         select: "firstName lastName profilePicture",
       })
-      .lean();
+      .lean()
+      .sort({ createdAt: -1 });
 
     const formattedCommunities = communities.map(community => ({
       communityImage: community.profileImage || "",
