@@ -172,35 +172,35 @@ export const getUserById = async (userId) => {
       name: "Profile",
       completion: Math.round(calculateProfileCompletion(user, userRequiredFields)),
       description: "Your Profile is successfully created, please complete the remaining profile",
-      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image+79.png"
+      image: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/image+79.png"
     };
 
     const milestone_company = {
       name: "Company",
       completion: Math.round(calculateProfileCompletion(user.startUp, companyRequiredFields)),
       description: "Company Profile is successfully created, please complete the remaining details",
-      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
+      image: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/image 79-1.png"
     };
 
     const milestone_onelink = {
       name: "OneLink",
       completion: user.startUp?.introductoryMessage || user.investor?.introductoryMessage ? 100 : 0,
       description: "Fill all details to complete Onelink profile.",
-      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-3.png"
+      image: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/image 79-3.png"
     };
 
     const milestone_documents = {
       name: "Documents",
       completion: Math.round(documentsCount <= 4 ? (documentsCount / 4) * 100 : 100),
       description: "Upload your business related documents to get your Onelink profile ready to share",
-      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-2.png"
+      image: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/image 79-2.png"
     };
 
     const milestone_posts = {
       name: "Posts",
       completion: postsCount > 0 ? 100 : 0,
       description: "Hola! Create your first post to share your experience with Capital Hub.",
-      image: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/image 79-1.png"
+      image: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/image 79-1.png"
     };
 
     const userProfile = {
@@ -252,22 +252,22 @@ export const getUserById = async (userId) => {
     if (user.startUp) {
       const socialLinks = [];
       if (user.startUp.socialLinks.website) {
-        socialLinks.push({ name: 'website', link: user.startUp.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+        socialLinks.push({ name: 'website', link: user.startUp.socialLinks.website, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/website.png' });
       }
       if (user.startUp.socialLinks.linkedin) {
-        socialLinks.push({ name: 'linkedin', link: user.startUp.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+        socialLinks.push({ name: 'linkedin', link: user.startUp.socialLinks.linkedin, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/linkedin.png' });
       }
       if (user.startUp.socialLinks.instagram) {
-        socialLinks.push({ name: 'instagram', link: user.startUp.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+        socialLinks.push({ name: 'instagram', link: user.startUp.socialLinks.instagram, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/instagram.png' });
       }
       if (user.startUp.socialLinks.twitter) {
-        socialLinks.push({ name: 'twitter', link: user.startUp.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+        socialLinks.push({ name: 'twitter', link: user.startUp.socialLinks.twitter, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/twitter.png' });
       }
       if (user.startUp.socialLinks.facebook) {
-        socialLinks.push({ name: 'facebook', link: user.startUp.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+        socialLinks.push({ name: 'facebook', link: user.startUp.socialLinks.facebook, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/facebook.png' });
       }
       if (user.startUp.contactDetails?.email) {
-        socialLinks.push({ name: 'email', link: user.startUp.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+        socialLinks.push({ name: 'email', link: user.startUp.contactDetails.email, logo: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/email.png" });
       }
 
       userProfile.companyData = {
@@ -286,22 +286,22 @@ export const getUserById = async (userId) => {
     } else if (user.investor) {
       const socialLinks = [];
       if (user.investor.socialLinks.website) {
-        socialLinks.push({ name: 'website', link: user.investor.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+        socialLinks.push({ name: 'website', link: user.investor.socialLinks.website, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/website.png' });
       }
       if (user.investor.socialLinks.linkedin) {
-        socialLinks.push({ name: 'linkedin', link: user.investor.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+        socialLinks.push({ name: 'linkedin', link: user.investor.socialLinks.linkedin, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/linkedin.png' });
       }
       if (user.investor.socialLinks.instagram) {
-        socialLinks.push({ name: 'instagram', link: user.investor.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+        socialLinks.push({ name: 'instagram', link: user.investor.socialLinks.instagram, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/instagram.png' });
       }
       if (user.investor.socialLinks.twitter) {
-        socialLinks.push({ name: 'twitter', link: user.investor.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+        socialLinks.push({ name: 'twitter', link: user.investor.socialLinks.twitter, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/twitter.png' });
       }
       if (user.investor.socialLinks.facebook) {
-        socialLinks.push({ name: 'facebook', link: user.investor.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+        socialLinks.push({ name: 'facebook', link: user.investor.socialLinks.facebook, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/facebook.png' });
       }
       if (user.investor.contactDetails?.email) {
-        socialLinks.push({ name: 'email', link: user.investor.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+        socialLinks.push({ name: 'email', link: user.investor.contactDetails.email, logo: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/email.png" });
       }
 
       userProfile.companyData = {
@@ -339,6 +339,7 @@ export const getFounderProfilePageData = async (userId, founderId) => {
     // Curate user profile response
     const userProfile = {
       profilePicture: user.profilePicture || "",
+      linkedinUrl: user.linkedin || "",
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       designation: user.designation || "",
@@ -362,22 +363,22 @@ export const getFounderProfilePageData = async (userId, founderId) => {
     if (user.startUp) {
       const socialLinks = [];
       if (user.startUp.socialLinks.website) {
-        socialLinks.push({ name: 'website', link: user.startUp.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+        socialLinks.push({ name: 'website', link: user.startUp.socialLinks.website, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/website.png' });
       }
       if (user.startUp.socialLinks.linkedin) {
-        socialLinks.push({ name: 'linkedin', link: user.startUp.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+        socialLinks.push({ name: 'linkedin', link: user.startUp.socialLinks.linkedin, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/linkedin.png' });
       }
       if (user.startUp.socialLinks.instagram) {
-        socialLinks.push({ name: 'instagram', link: user.startUp.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+        socialLinks.push({ name: 'instagram', link: user.startUp.socialLinks.instagram, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/instagram.png' });
       }
       if (user.startUp.socialLinks.twitter) {
-        socialLinks.push({ name: 'twitter', link: user.startUp.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+        socialLinks.push({ name: 'twitter', link: user.startUp.socialLinks.twitter, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/twitter.png' });
       }
       if (user.startUp.socialLinks.facebook) {
-        socialLinks.push({ name: 'facebook', link: user.startUp.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+        socialLinks.push({ name: 'facebook', link: user.startUp.socialLinks.facebook, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/facebook.png' });
       }
       if (user.startUp.contactDetails?.email) {
-        socialLinks.push({ name: 'email', link: user.startUp.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+        socialLinks.push({ name: 'email', link: user.startUp.contactDetails.email, logo: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/email.png" });
       }
 
       companyData = {
@@ -395,22 +396,22 @@ export const getFounderProfilePageData = async (userId, founderId) => {
     } else if (user.investor) {
       const socialLinks = [];
       if (user.investor.socialLinks.website) {
-        socialLinks.push({ name: 'website', link: user.investor.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+        socialLinks.push({ name: 'website', link: user.investor.socialLinks.website, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/website.png' });
       }
       if (user.investor.socialLinks.linkedin) {
-        socialLinks.push({ name: 'linkedin', link: user.investor.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+        socialLinks.push({ name: 'linkedin', link: user.investor.socialLinks.linkedin, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/linkedin.png' });
       }
       if (user.investor.socialLinks.instagram) {
-        socialLinks.push({ name: 'instagram', link: user.investor.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+        socialLinks.push({ name: 'instagram', link: user.investor.socialLinks.instagram, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/instagram.png' });
       }
       if (user.investor.socialLinks.twitter) {
-        socialLinks.push({ name: 'twitter', link: user.investor.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+        socialLinks.push({ name: 'twitter', link: user.investor.socialLinks.twitter, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/twitter.png' });
       }
       if (user.investor.socialLinks.facebook) {
-        socialLinks.push({ name: 'facebook', link: user.investor.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+        socialLinks.push({ name: 'facebook', link: user.investor.socialLinks.facebook, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/facebook.png' });
       }
       if (user.investor.contactDetails?.email) {
-        socialLinks.push({ name: 'email', link: user.investor.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+        socialLinks.push({ name: 'email', link: user.investor.contactDetails.email, logo: "https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/email.png" });
       }
 
       companyData = {
@@ -1047,19 +1048,19 @@ export const getExplore = async (filters) => {
         const socialLinks = [];
       
         if (startup.socialLinks.website) {
-          socialLinks.push({ name: 'website', link: startup.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+          socialLinks.push({ name: 'website', link: startup.socialLinks.website, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/website.png' });
       }
       if (startup.socialLinks.linkedin) {
-          socialLinks.push({ name: 'linkedin', link: startup.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+          socialLinks.push({ name: 'linkedin', link: startup.socialLinks.linkedin, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/linkedin.png' });
       }
       if (startup.socialLinks.instagram) {
-          socialLinks.push({ name: 'instagram', link: startup.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+          socialLinks.push({ name: 'instagram', link: startup.socialLinks.instagram, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/instagram.png' });
       }
       if (startup.socialLinks.twitter) {
-          socialLinks.push({ name: 'twitter', link: startup.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+          socialLinks.push({ name: 'twitter', link: startup.socialLinks.twitter, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/twitter.png' });
       }
       if (startup.socialLinks.facebook) {
-          socialLinks.push({ name: 'facebook', link: startup.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+          socialLinks.push({ name: 'facebook', link: startup.socialLinks.facebook, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/facebook.png' });
       }
       
         return {
@@ -1200,22 +1201,22 @@ export const getExplore = async (filters) => {
       
           const socialLinks = [];
           if (startup.socialLinks.website) {
-            socialLinks.push({ name: 'website', link: startup.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+            socialLinks.push({ name: 'website', link: startup.socialLinks.website, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/website.png' });
         }
         if (startup.socialLinks.linkedin) {
-            socialLinks.push({ name: 'linkedin', link: startup.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+            socialLinks.push({ name: 'linkedin', link: startup.socialLinks.linkedin, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/linkedin.png' });
         }
         if (startup.socialLinks.instagram) {
-            socialLinks.push({ name: 'instagram', link: startup.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+            socialLinks.push({ name: 'instagram', link: startup.socialLinks.instagram, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/instagram.png' });
         }
         if (startup.socialLinks.twitter) {
-            socialLinks.push({ name: 'twitter', link: startup.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+            socialLinks.push({ name: 'twitter', link: startup.socialLinks.twitter, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/twitter.png' });
         }
         if (startup.socialLinks.facebook) {
-            socialLinks.push({ name: 'facebook', link: startup.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+            socialLinks.push({ name: 'facebook', link: startup.socialLinks.facebook, logo: 'https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/facebook.png' });
         }        
           if(startup.contactDetails?.email){
-            socialLinks.push({name: 'email', link: startup.contactDetails?.email, logo:"https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png"})
+            socialLinks.push({name: 'email', link: startup.contactDetails?.email, logo:"https://ch-social-link-logo.s3.ap-south-1.amazonaws.com/email.png"})
           }
       
           return {
