@@ -27,6 +27,8 @@ import {
   getUserByIdBody,
   getProfilePosts,
   toggleUserBlockStatus,
+  getFounderProfilePageData,
+  addFounderEmailToCurrentUser,
 } from "../services/userService.js";
 
 import { sendMail } from "../utils/mailHelper.js";
@@ -1091,5 +1093,30 @@ export const toggleUserBlockController = async (req, res) => {
   } catch (error) {
     console.log("Error during toggling user block status", error);
     res.json({ status: false, message: "Internal Server Error" });
+  }
+};
+
+export const getFounderProfilePageDataController = async (req, res) => {
+  try {
+    const  userId  = req.userId;
+    const founderId = req.params.founderId;
+    const response = await getFounderProfilePageData(userId, founderId);
+    res.send({status:true, message:"Founder profile page data fetched successfully", data:response});
+  } catch (error) {
+    console.error(error);
+    res.send({ status: false, message: "An error occurred while getting the founder profile page data." });
+  }
+};
+
+export const addFounderEmailToCurrentUserController = async (req, res) => {
+  try{
+    const  userId  = req.userId;
+    const founderId = req.params.founderId;
+    const response = await addFounderEmailToCurrentUser(userId, founderId);
+    res.send(response);
+  }
+  catch(error){
+    console.error(error);
+    res.send({ status: false, message: "An error occurred while adding the founder email to the current user." });
   }
 };

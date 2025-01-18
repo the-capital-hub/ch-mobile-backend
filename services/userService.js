@@ -328,6 +328,195 @@ export const getUserById = async (userId) => {
   }
 };
 
+//getProfilePageData
+export const getFounderProfilePageData = async (userId, founderId) => {
+  try {
+    const user = await UserModel.findById(founderId).populate('startUp investor');
+    const currentUser = await UserModel.findById(userId);
+
+    let companyData = {};
+    let userEmail = {};
+    // Curate user profile response
+    const userProfile = {
+      profilePicture: user.profilePicture || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      designation: user.designation || "",
+      companyName: user.startUp?.company || user.investor?.companyName || "",
+      location: user.startUp?.location || user.investor?.location || "",
+      bio: user.bio || "",
+      education: user.education || "",
+      experience: user.recentExperience.map(exp => ({
+        companyLogo: exp.logo || "",
+        companyName: exp.companyName || "",
+        location: exp.location || "",
+        role: exp.role || "",
+        description: exp.description || "",
+        startYear: exp.experienceDuration.startYear ? new Date(exp.experienceDuration.startYear).getFullYear() : "",
+        endYear: exp.experienceDuration.endYear ? new Date(exp.experienceDuration.endYear).getFullYear() : "",
+      })) || [],
+        isSubscribed: user.isSubscribed || false
+    };
+
+
+    if (user.startUp) {
+      const socialLinks = [];
+      if (user.startUp.socialLinks.website) {
+        socialLinks.push({ name: 'website', link: user.startUp.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+      }
+      if (user.startUp.socialLinks.linkedin) {
+        socialLinks.push({ name: 'linkedin', link: user.startUp.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+      }
+      if (user.startUp.socialLinks.instagram) {
+        socialLinks.push({ name: 'instagram', link: user.startUp.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+      }
+      if (user.startUp.socialLinks.twitter) {
+        socialLinks.push({ name: 'twitter', link: user.startUp.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+      }
+      if (user.startUp.socialLinks.facebook) {
+        socialLinks.push({ name: 'facebook', link: user.startUp.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+      }
+      if (user.startUp.contactDetails?.email) {
+        socialLinks.push({ name: 'email', link: user.startUp.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+      }
+
+      companyData = {
+        companyName: user.startUp.company || "",
+        location: user.startUp.location || "",
+        logo: user.startUp.logo || "",
+        description: user.startUp.description || "",
+        sector: user.startUp.sector || "",
+        startedAtDate: formatDate(user.startUp.startedAtDate) || "",
+        socialLinks, 
+        stage: user.startUp.stage || "",
+        age: formatDate(user.startUp.age) || "",
+        lastFunding: formatDate(user.startUp.lastFunding) || ""
+      };
+    } else if (user.investor) {
+      const socialLinks = [];
+      if (user.investor.socialLinks.website) {
+        socialLinks.push({ name: 'website', link: user.investor.socialLinks.website, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/website.png' });
+      }
+      if (user.investor.socialLinks.linkedin) {
+        socialLinks.push({ name: 'linkedin', link: user.investor.socialLinks.linkedin, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/linkedin.png' });
+      }
+      if (user.investor.socialLinks.instagram) {
+        socialLinks.push({ name: 'instagram', link: user.investor.socialLinks.instagram, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/instagram.png' });
+      }
+      if (user.investor.socialLinks.twitter) {
+        socialLinks.push({ name: 'twitter', link: user.investor.socialLinks.twitter, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/twitter.png' });
+      }
+      if (user.investor.socialLinks.facebook) {
+        socialLinks.push({ name: 'facebook', link: user.investor.socialLinks.facebook, logo: 'https://thecapitalhub.s3.ap-south-1.amazonaws.com/facebook.png' });
+      }
+      if (user.investor.contactDetails?.email) {
+        socialLinks.push({ name: 'email', link: user.investor.contactDetails.email, logo: "https://thecapitalhub.s3.ap-south-1.amazonaws.com/email.png" });
+      }
+
+      companyData = {
+        companyName: user.investor.companyName || "",
+        location: user.investor.location || "",
+        logo: user.investor.logo || "",
+        description: user.investor.description || "",
+        sector: user.investor.sector || "",
+        startedAtDate: formatDate(user.investor.startedAtDate) || "",
+        socialLinks,
+        stage: user.investor.stage || "",
+        age: formatDate(user.investor.age) || ""
+      };
+    }
+
+    // display email if current user has access to founder's email
+    if(currentUser.investorIdCount.includes(founderId) || currentUser.isSubscribed){
+      userEmail = {
+        email: user.email,
+        isAccessible: true,
+      };
+    }
+    else{
+      userEmail = {
+        email: "",
+        isAccessible: false,
+      };
+    }
+
+    return {
+      userProfile,
+      companyData,
+      userEmail,
+    };
+  } catch (error) {
+    console.error("Error getting profile page data:", error);
+    return {
+      status: false,
+      message: "An error occurred while getting the profile page data.",
+    };
+  }
+}
+
+//add founders email to current user
+export const addFounderEmailToCurrentUser = async (userId, founderId) => {
+  try {
+    const founder = await UserModel.findById(founderId);
+    const currentUser = await UserModel.findById(userId);
+
+    // Check if the founder's email is already accessible
+    if (currentUser.investorIdCount.includes(founderId)) {
+      const userEmail = {
+        email: founder.email,
+        isAccessible: true,
+      };
+      return {
+        status: true,
+        message: "Current user already has access to founder's email",
+        data: userEmail,
+      };
+    }
+
+    // Check if the user is subscribed
+    if (currentUser.isSubscribed) {
+      const userEmail = {
+        email: founder.email,
+        isAccessible: true,
+      };
+      currentUser.investorIdCount.push(founderId);
+      await currentUser.save();
+      return {
+        status: true,
+        message: "Founder email added to current user",
+        data: userEmail,
+      };
+    }
+
+    // Check if the user has reached the maximum limit of 5 emails
+    if (currentUser.investorIdCount.length >= 5 && !currentUser.isSubscribed) {
+      return {
+        status: false,
+        message: "Current user has reached the maximum number of email access. Please subscribe to access more Founders/Investors' emails.",
+      };
+    }
+
+    // If not subscribed and under limit, add the email
+    currentUser.investorIdCount.push(founderId);
+    await currentUser.save();
+    const userEmail = {
+      email: founder.email,
+      isAccessible: true,
+    };
+    return {
+      status: true,
+      message: "Founder email added to current user",
+      data: userEmail,
+    };
+
+  } catch (error) {
+    console.error("Error viewing founder email:", error);
+    return {
+      status: false,
+      message: "An error occurred while viewing the founder email.",
+    };
+  }
+};
 
 // Update User
 export const updateUserData = async ({ userId, newData }) => {

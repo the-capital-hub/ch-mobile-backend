@@ -37,7 +37,9 @@ import {
   unblockUserController,
   resendOtp,
   getProfilePostsController,
-  toggleUserBlockController
+  toggleUserBlockController,
+  getFounderProfilePageDataController,
+  addFounderEmailToCurrentUserController
 } from "../controllers/userData.js";
 
 import { authenticateToken } from "../middlewares/authenticateToken.js";
@@ -84,7 +86,8 @@ router.use(authenticateToken);
 
 // Profile Page
 router.patch("/updateFounder", updateUser);
-
+router.get("/getFounderProfilePageData/:founderId", getFounderProfilePageDataController);
+router.post("/addFounderEmailToCurrentUser/:founderId", addFounderEmailToCurrentUserController);
 router.get("/getUser", getUsersController);
 router.patch("/changePassword", changePasswordController);
 
