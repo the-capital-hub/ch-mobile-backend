@@ -39,6 +39,11 @@ const calculateProfileCompletion = (user, requiredFields) => {
   return (filledFields.length / requiredFields.length) * 100;
 };
 
+const base64ToBuffer = (base64String) => {  
+  const buffer = Buffer.from(base64String, 'base64');
+  return buffer
+};
+
 export const getUsersService = async (info) => {
   try {
     const products = await UserModel.find({}).toArray();
@@ -346,17 +351,24 @@ export const getFounderProfilePageData = async (userId, founderId) => {
       companyName: user.startUp?.company || user.investor?.companyName || "",
       location: user.startUp?.location || user.investor?.location || "",
       bio: user.bio || "",
-      education: user.education || "",
-      experience: user.recentExperience.map(exp => ({
-        companyLogo: exp.logo || "",
-        companyName: exp.companyName || "",
-        location: exp.location || "",
-        role: exp.role || "",
-        description: exp.description || "",
-        startYear: exp.experienceDuration.startYear ? new Date(exp.experienceDuration.startYear).getFullYear() : "",
-        endYear: exp.experienceDuration.endYear ? new Date(exp.experienceDuration.endYear).getFullYear() : "",
+      education: user.recentEducation.map(edu => ({
+        educationLogo: edu.logo || "https://res.cloudinary.com/drjt9guif/image/upload/v1737795495/undefined/startUps/logos/vnzjvdh52sd16mo6rge7.webp",
+        educationSchool: edu.schoolName || "",
+        educationLocation: edu.location || "",
+        educationCourse: edu.course || "",
+        educationPassoutDate: edu.passoutYear ? new Date(edu.passoutYear).getFullYear() : "",
+        educationDescription: edu.description || "",
       })) || [],
-        isSubscribed: user.isSubscribed || false
+      experience: user.recentExperience.map(exp => ({
+        companyLogo: exp.logo || "https://res.cloudinary.com/drjt9guif/image/upload/v1737795495/undefined/startUps/logos/tjuzpjghxiyarfwihzkh.webp",
+        companyName: exp.companyName || "",
+        companyLocation: exp.location || "",
+        companyRole: exp.role || "",
+        companyDescription: exp.description || "",
+        companyStartDate: exp.experienceDuration.startYear ? new Date(exp.experienceDuration.startYear).getFullYear() : "",
+        companyEndDate: exp.experienceDuration.endYear ? new Date(exp.experienceDuration.endYear).getFullYear() : "",
+      })) || [],
+      isSubscribed: user.isSubscribed || false
     };
 
 
@@ -522,43 +534,100 @@ export const addFounderEmailToCurrentUser = async (userId, founderId) => {
 // Update User
 export const updateUserData = async ({ userId, newData }) => {
   try {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { status: false, message: "User not found", data: {} };
+    }
 
-    const base64ToBuffer = (base64String) => {
-      const base64Data = base64String.replace(/^data:image\/jpg;base64,/, '');
-      return Buffer.from(base64Data, 'base64');
-    };
-
-
-    if (newData?.profilePicture) {
-      const profilePictureBuffer = base64ToBuffer(newData.profilePicture);
-      const profilePictureBase64 = `data:image/webp;base64,${profilePictureBuffer.toString('base64')}`;
-      
-      const { secure_url } = await cloudinary.uploader.upload(profilePictureBase64, {
-        folder: `${process.env.CLOUDINARY_FOLDER}/startUps/logos`,
+    // Handle profile picture upload
+    if (newData.profilePicture) {
+      const imageBuffer = base64ToBuffer(newData.profilePicture);
+      const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
+      const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
+        folder: `${process.env.CLOUDIANRY_FOLDER}/users/profile`,
         format: "webp",
         unique_filename: true,
+        resource_type: "auto"
+      });
+      newData.profilePicture = secure_url;
+    }
+
+    // Basic user info update
+    const basicFields = ['firstName', 'lastName', 'userName'];
+    basicFields.forEach(field => {
+      if (newData[field]) user[field] = newData[field];
+    });
+
+    // Handle multiple experience updates
+    if (newData.experiences && Array.isArray(newData.experiences)) {
+      const experiencePromises = newData.experiences.map(async (exp) => {
+        // Handle company logo upload
+        let companyLogo = null;
+        if (exp.companyLogo) {
+          const imageBuffer = base64ToBuffer(exp.companyLogo);
+          const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
+          const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
+            folder: `${process.env.CLOUDIANRY_FOLDER}/startUps/logos`,
+            format: "webp",
+            unique_filename: true,
+            resource_type: "auto"
+          });
+          companyLogo = secure_url;
+        }
+
+        return {
+          companyName: exp.companyName,
+          location: exp.companyLocation,
+          role: exp.companyRole,
+          description: exp.companyDescription,
+          logo: companyLogo,
+          experienceDuration: {
+            startYear: exp.companyStartDate,
+            endYear: exp.companyEndDate,
+          },
+        };
       });
 
-      newData.profilePicture = secure_url; 
+      const experiences = await Promise.all(experiencePromises);
+      user.recentExperience = experiences;
     }
-    await UserModel.findByIdAndUpdate(
-      userId,
-      { ...newData },
-      { new: true }
-    );
-    const data = await getUserById(userId);
 
-    return {
-      status: true,
-      message: "User updated succesfully",
-      data,
-    };
+    // Handle multiple education updates
+    if (newData.educations && Array.isArray(newData.educations)) {
+      const educationPromises = newData.educations.map(async (edu) => {
+        // Handle education logo upload
+        let educationLogo = null;
+        if (edu.educationLogo) {
+          const imageBuffer = base64ToBuffer(edu.educationLogo);
+          const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
+          const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
+            folder: `${process.env.CLOUDIANRY_FOLDER}/education/logos`,
+            format: "webp",
+            unique_filename: true,
+            resource_type: "auto"
+          });
+          educationLogo = secure_url;
+        }
+
+        return {
+          schoolName: edu.educationSchool,
+          location: edu.educationLocation,
+          course: edu.educationCource,
+          passoutYear: edu.educationPassoutDate,
+          description: edu.educationDescription,
+          logo: educationLogo,
+        };
+      });
+
+      const educations = await Promise.all(educationPromises);
+      user.recentEducation = educations;
+    }
+
+    await user.save();
+    return { status: true, message: "User updated successfully", data: user };
   } catch (error) {
-    console.log(error);
-    return {
-      status: false,
-      message: "An error occurred while updating the bio.",
-    };
+    console.error("Error updating user:", error);
+    return { status: false, message: error.message, data: {} };
   }
 };
 
