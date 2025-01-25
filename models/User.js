@@ -259,4 +259,8 @@ userSchema.post(
 	}
 );
 
+// Indexes remain the same
+userSchema.index({ email: 1, userStatus: 1 });
+userSchema.index({ isInvestor: 1, isVc: 1 });
+
 export const UserModel = model("Users", userSchema);
