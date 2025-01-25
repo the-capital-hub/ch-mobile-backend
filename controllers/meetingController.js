@@ -17,11 +17,11 @@ export const updateAvaibilityController = async (req, res) => {
 	try {
 		const { userId } = req;
 		const response = await updateAvailability(userId, req.body);
-		res.status(response.status).send(response);
+		res.send(response);
 	} catch (error) {
 		console.error(error);
-		res.status(500).send({
-			status: 500,
+		res.send({
+			status: false,
 			message: "An error occurred while updating availability.",
 		});
 	}
@@ -31,11 +31,11 @@ export const createEventController = async (req, res) => {
 	try {
 		const { userId } = req;
 		const response = await createEvent(userId, req.body);
-		res.status(response.status).send(response);
+		res.send(response);
 	} catch (error) {
 		console.error(error);
-		res.status(500).send({
-			status: 500,
+		res.send({
+			status: false,
 			message: "An error occurred while updating availability.",
 		});
 	}
@@ -60,16 +60,30 @@ export const deleteEventController = async (req, res) => {
 		const { userId } = req;
 		const { eventId } = req.params;
 		const response = await deleteEvent(userId, eventId);
-		res.status(response.status).send(response);
+		res.send(response);
 	} catch (error) {
 		console.error(error);
-		res.status(500).send({
-			status: 500,
+		ressend({
+			status: false,
 			message: "An error occurred while updating availability.",
 		});
 	}
 };
 
+export const getALLScheduledMeetings = async (req, res) => {
+	try {
+		const { userId } = req;
+		const response = await getAllSheduledMeeting(userId);
+		res.send(response);
+	} catch (error) {
+		res.send({
+			status: false,
+			message: "An error occurred while getting scheduled meeting.",
+		});
+	}
+};
+
+// Below Code Not Updtated
 export const getSchedulePageDataController = async (req, res) => {
 	try {
 		const { username, eventId } = req.params;
@@ -142,19 +156,6 @@ export const cancelSheduledMeetingController = async (req, res) => {
 		res.status(500).send({
 			status: 500,
 			message: "An error occurred while cancelling scheduled meeting.",
-		});
-	}
-};
-
-export const getALLScheduledMeetings = async (req, res) => {
-	try {
-		const { userId } = req;
-		const response = await getAllSheduledMeeting(userId);
-		res.status(response.status).send(response);
-	} catch (error) {
-		res.status(500).send({
-			status: 500,
-			message: "An error occurred while getting scheduled meeting.",
 		});
 	}
 };

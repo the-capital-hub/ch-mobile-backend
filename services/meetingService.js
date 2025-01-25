@@ -53,14 +53,14 @@ export const updateAvailability = async (userId, data) => {
 			{ upsert: true, new: true }
 		);
 		return {
-			status: 200,
+			status: true,
 			message: "Availability updated successfully",
 			data: response,
 		};
 	} catch (error) {
 		console.error("Error updating availability:", error);
 		return {
-			status: 500,
+			status: false,
 			message: "An error occurred while updating availability.",
 		};
 	}
@@ -71,8 +71,8 @@ export const createEvent = async (userId, data) => {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
 			return {
-				status: 404,
-				message: "User  not found",
+				status: false,
+				message: "User not found",
 			};
 		}
 
@@ -94,20 +94,20 @@ export const createEvent = async (userId, data) => {
 
 		if (!response) {
 			return {
-				status: 500,
+				status: false,
 				message: "An error occurred while creating event.",
 			};
 		}
 
 		return {
-			status: 200,
+			status: true,
 			message: "Event created successfully",
 			data: response.data,
 		};
 	} catch (error) {
 		console.error("Error creating event:", error);
 		return {
-			status: 500,
+			status: false,
 			message: "An error occurred while creating event.",
 		};
 	}
@@ -118,8 +118,8 @@ export const getEvents = async (userId) => {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
 			return {
-				status: 404,
-				message: "User  not found",
+				status: false,
+				message: "User not found",
 			};
 		}
 
@@ -127,20 +127,20 @@ export const getEvents = async (userId) => {
 
 		if (!response) {
 			return {
-				status: 500,
+				status: false,
 				message: "An error occurred while getting events.",
 			};
 		}
 
 		return {
-			status: 200,
+			status: true,
 			message: "Events retrieved successfully",
 			data: response,
 		};
 	} catch (error) {
 		console.error("Error getting events:", error);
 		return {
-			status: 500,
+			status: false,
 			message: "An error occurred while getting events.",
 		};
 	}
@@ -151,8 +151,8 @@ export const deleteEvent = async (userId, eventId) => {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
 			return {
-				status: 404,
-				message: "User  not found",
+				status: false,
+				message: "User not found",
 			};
 		}
 		await UserModel.findByIdAndUpdate(user._id, {
@@ -166,24 +166,56 @@ export const deleteEvent = async (userId, eventId) => {
 
 		if (!response) {
 			return {
-				status: 500,
+				status: false,
 				message: "An error occurred while deleting event.",
 			};
 		}
 
 		return {
-			status: 200,
+			status: true,
 			message: "Event deleted successfully",
 			data: response,
 		};
 	} catch (error) {
 		console.error("Error deleting event:", error);
 		return {
-			status: 500,
+			status: false,
 			message: "An error occurred while deleting event.",
 		};
 	}
 };
+
+export const getAllSheduledMeeting = async (userId) => {
+	try {
+		const user = await UserModel.findOne({ _id: userId });
+		if (!user) {
+			return {
+				status: false,
+				message: "User  not found",
+			};
+		}
+		// console.log("userId", user._id);
+		const response = await BookingModel.find({ userId: user._id })
+			.populate("userId")
+			.populate("eventId");
+
+		// console.log("meetings", response);
+
+		return {
+			status: true,
+			message: "Scheduled meetings retrieved successfully",
+			data: response,
+		};
+	} catch (error) {
+		console.error("Error getting scheduled meetings:", error);
+		return {
+			status: false,
+			message: "An error occurred while getting scheduled meetings.",
+		};
+	}
+};
+
+// Below Code Not Updated
 
 // Unauthenticated route for scheduling meetings
 export const getSchedulePageData = async (username, eventId) => {
@@ -665,36 +697,6 @@ export const cancelSheduledMeeting = async (userId, meetingId) => {
 		return {
 			status: 500,
 			message: "An error occurred while cancelling scheduled meeting.",
-		};
-	}
-};
-
-export const getAllSheduledMeeting = async (userId) => {
-	try {
-		const user = await UserModel.findOne({ _id: userId });
-		if (!user) {
-			return {
-				status: 404,
-				message: "User  not found",
-			};
-		}
-		// console.log("userId", user._id);
-		const response = await BookingModel.find({ userId: user._id })
-			.populate("userId")
-			.populate("eventId");
-
-		// console.log("meetings", response);
-
-		return {
-			status: 200,
-			message: "Scheduled meetings retrieved successfully",
-			data: response,
-		};
-	} catch (error) {
-		console.error("Error getting scheduled meetings:", error);
-		return {
-			status: 500,
-			message: "An error occurred while getting scheduled meetings.",
 		};
 	}
 };
