@@ -63,7 +63,7 @@ export const deleteEventController = async (req, res) => {
 		res.send(response);
 	} catch (error) {
 		console.error(error);
-		ressend({
+		res.send({
 			status: false,
 			message: "An error occurred while updating availability.",
 		});
@@ -137,45 +137,3 @@ export const paymentVerifyController = async (req, res) => {
 		});
 	}
 };
-
-// Below Code Not Updtated
-// export const getSchedulePageDataController = async (req, res) => {
-// 	try {
-// 		const { username, eventId } = req.params;
-// 		// console.log(username, eventId);
-// 		const response = await getSchedulePageData(username, eventId);
-// 		res.status(response.status).send(response);
-// 	} catch (error) {
-// 		console.error(error);
-// 		res.status(500).send({
-// 			status: 500,
-// 			message: "An error occurred while updating availability.",
-// 		});
-// 	}
-// };
-
-// export const getEventsByUsernameController = async (req, res) => {
-// 	try {
-// 		const { username } = req.params;
-// 		const response = await getEventsByUsername(username);
-// 		res.status(response.status).send(response);
-// 	} catch (error) {
-// 		res.status(500).send({
-// 			status: 500,
-// 			message: "An error occurred while getting events by username.",
-// 		});
-// 	}
-// };
-
-// export const getEventsByOnelinkController = async (req, res) => {
-// 	try {
-// 		const { onelinkId } = req.params;
-// 		const response = await getEventsByOnelink(onelinkId);
-// 		res.status(response.status).send(response);
-// 	} catch (error) {
-// 		res.status(500).send({
-// 			status: 500,
-// 			message: "An error occurred while getting events by onelink.",
-// 		});
-// 	}
-// };
