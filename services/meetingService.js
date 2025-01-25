@@ -27,7 +27,7 @@ export const updateAvailability = async (userId, data) => {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
 			return {
-				status: 404,
+				status: false,
 				message: "User  not found",
 			};
 		}

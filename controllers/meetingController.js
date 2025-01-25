@@ -48,8 +48,8 @@ export const getEventsController = async (req, res) => {
 		res.status(response.status).send(response);
 	} catch (error) {
 		console.error(error);
-		res.status(500).send({
-			status: 500,
+		res.send({
+			status: false,
 			message: "An error occurred while updating availability.",
 		});
 	}
