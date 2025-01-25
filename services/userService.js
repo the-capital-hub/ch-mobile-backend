@@ -581,9 +581,9 @@ export const updateUserData = async ({ userId, newData }) => {
     // Handle multiple experience updates
     if (newData.experiences && Array.isArray(newData.experiences)) {
       const experiencePromises = newData.experiences.map(async (exp) => {
-        // Handle company logo upload
-        let companyLogo = null;
-        if (exp.companyLogo) {
+        // Handle company logo upload only if it's not an HTTPS URL
+        let companyLogo = exp.companyLogo;
+        if (exp.companyLogo && !exp.companyLogo.startsWith('https://')) {
           const imageBuffer = base64ToBuffer(exp.companyLogo);
           const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
           const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
@@ -615,9 +615,9 @@ export const updateUserData = async ({ userId, newData }) => {
     // Handle multiple education updates
     if (newData.educations && Array.isArray(newData.educations)) {
       const educationPromises = newData.educations.map(async (edu) => {
-        // Handle education logo upload
-        let educationLogo = null;
-        if (edu.educationLogo) {
+        // Handle education logo upload only if it's not an HTTPS URL
+        let educationLogo = edu.educationLogo;
+        if (edu.educationLogo && !edu.educationLogo.startsWith('https://')) {
           const imageBuffer = base64ToBuffer(edu.educationLogo);
           const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
           const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
