@@ -1,6 +1,6 @@
 import { AvailabilityModel } from "../models/Availability.js";
 import { UserModel } from "../models/User.js";
-import { EventModel } from "../models/Event.js";
+import { EventModel } from "../models/Events.js";
 import { BookingModel } from "../models/Bookings.js";
 import { formatInTimeZone } from "date-fns-tz";
 import { parse, isAfter, addMinutes } from "date-fns";
@@ -215,92 +215,102 @@ export const getAllSheduledMeeting = async (userId) => {
 	}
 };
 
-// Below Code Not Updated
-
-// Unauthenticated route for scheduling meetings
-export const getSchedulePageData = async (username, eventId) => {
+export const cancelSheduledMeeting = async (userId, meetingId) => {
 	try {
-		// Find the user by username
-		const user = await UserModel.findOne({ userName: username });
-
-		// Check if user was found
+		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
 			return {
-				status: 404,
-				message: "User  not found",
+				status: false,
+				message: "User not found",
 			};
 		}
 
-		// Find the user's availability
-		const availability = await AvailabilityModel.findOne({ userId: user._id });
+		// Check if user has meeting token and if it is expired or not
+		const currentTime = new Date();
+		let accessToken = user.meetingToken?.access_token;
+		let refreshToken = user.meetingToken?.refresh_token;
+		let expireIn = user.meetingToken?.expire_in;
 
-		// Check if availability was found
-		if (!availability) {
+		if (expireIn && isAfter(currentTime, new Date(expireIn))) {
+			// Token is expired, use refresh token to get a new access token
+			const oAuth2Client = new google.auth.OAuth2(
+				process.env.GOOGLE_CLIENT_ID,
+				process.env.GOOGLE_CLIENT_SECRET,
+				process.env.GOOGLE_REDIRECT_URI
+			);
+
+			oAuth2Client.setCredentials({ refresh_token: refreshToken });
+
+			const { credentials } = await oAuth2Client.refreshAccessToken();
+			accessToken = credentials.access_token;
+
+			// Get the current time in the specified time zone
+			const expireTime = addMinutes(currentTime, 50); // Add 50 minutes to current time
+
+			// Format the expiration time in the desired time zone (Asia/Kolkata)
+			const formattedExpireTime = formatInTimeZone(
+				expireTime,
+				"Asia/Kolkata",
+				"yyyy-MM-dd'T'HH:mm:ss" // Format without offset
+			);
+
+			// Update the user's meeting token with the new access token and reset the expiration time
+			user.meetingToken.access_token = accessToken;
+			user.meetingToken.expire_in = formattedExpireTime; // Store the formatted expiration time
+			await user.save();
+		}
+
+		// Set the credentials for the OAuth2 client
+		oAuth2Client.setCredentials({ access_token: accessToken });
+
+		const meeting = await BookingModel.findOne({
+			_id: meetingId,
+			userId: user._id,
+		});
+		const event = await EventModel.findOne({
+			userId: user._id,
+			bookings: meetingId,
+		});
+		if (!meeting) {
 			return {
-				status: 404,
-				message: "Availability not found for the user",
+				status: false,
+				message: "Meeting not found",
 			};
 		}
 
-		// Find events associated with the user
-		const events = await EventModel.find({ _id: eventId, userId: user._id });
+		// Cancel the meeting in Google Calendar
+		const calendar = google.calendar({
+			version: "v3",
+			auth: oAuth2Client,
+		});
 
-		// Check if events were found
-		if (!events || events.length === 0) {
-			return {
-				status: 404,
-				message: "No events found for the user",
-			};
-		}
+		await calendar.events.delete({
+			calendarId: "primary",
+			eventId: meeting.googleEventId,
+		});
 
-		// Return the gathered data
+		// Delete the meeting from the database
+		await EventModel.findByIdAndUpdate(event._id, {
+			$pull: { bookings: meetingId },
+		});
+		const response = await BookingModel.findOneAndDelete({
+			_id: meetingId,
+			userId: user._id,
+		});
+
 		return {
-			status: 200,
-			message: "Schedule page data retrieved successfully",
-			data: {
-				user: user,
-				availability: availability,
-				events: events,
-			},
+			status: true,
+			message: "Scheduled meeting deleted successfully",
+			data: response,
 		};
 	} catch (error) {
-		console.error("Error getting schedule page data:", error);
+		console.error("Error cancelling scheduled meeting:", error);
 		return {
-			status: 500,
-			message: "An error occurred while getting schedule page data.",
+			status: false,
+			message: "An error occurred while cancelling scheduled meeting.",
 		};
 	}
 };
-
-function convertToDateObject(dateString) {
-	// Get current year
-	const currentYear = new Date().getFullYear();
-
-	// Parse the month and day
-	const [month, day] = dateString.split(" ");
-
-	// Create a mapping of month names to month indices
-	const monthMap = {
-		January: 0,
-		February: 1,
-		March: 2,
-		April: 3,
-		May: 4,
-		June: 5,
-		July: 6,
-		August: 7,
-		September: 8,
-		October: 9,
-		November: 10,
-		December: 11,
-	};
-
-	// Convert month name to month index
-	const monthIndex = monthMap[month];
-
-	// Create and return the date object
-	return new Date(currentYear, monthIndex, parseInt(day));
-}
 
 // Unauthenticated route for scheduling meetings
 export const scheduleMeeting = async (data) => {
@@ -477,7 +487,7 @@ export const scheduleMeeting = async (data) => {
 
 		// Return the successful response
 		return {
-			status: 200,
+			status: true,
 			message: "Meeting scheduled successfully",
 			data: meeting,
 		};
@@ -485,7 +495,7 @@ export const scheduleMeeting = async (data) => {
 		console.error("Error scheduling meeting:", error);
 		// Return an error response
 		return {
-			status: 500,
+			status: false,
 			message: "An error occurred while scheduling the meeting.",
 		};
 	}
@@ -519,7 +529,7 @@ export const createPaymentSession = async (data) => {
 				customer_id: customerId,
 				customer_name: data.name.trim(),
 				customer_email: data.email.toLowerCase().trim(),
-				customer_phone: "+919999999999",
+				customer_phone: data.phoneNumber.trim(),
 			},
 			order_expiry_time: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes expiry
 		};
@@ -533,13 +543,13 @@ export const createPaymentSession = async (data) => {
 		}
 
 		return {
-			status: 200,
+			status: true,
 			data: response.data,
 		};
 	} catch (error) {
 		console.error("Payment error:", error);
 		return {
-			status: 500,
+			status: false,
 			data: {
 				orderId: null,
 				paymentSessionId: null,
@@ -571,7 +581,7 @@ export const verifyPayment = async (req, res) => {
 		const validPaymentStatuses = ["success", "completed", "settled"];
 
 		return {
-			status: 200,
+			status: true,
 			data: {
 				orderId,
 				paymentId: payment.cf_payment_id,
@@ -587,7 +597,7 @@ export const verifyPayment = async (req, res) => {
 	} catch (error) {
 		console.error("Payment error:", error);
 		return {
-			status: 500,
+			status: false,
 			data: {
 				orderId: null,
 				paymentId: null,
@@ -604,151 +614,141 @@ export const verifyPayment = async (req, res) => {
 	}
 };
 
-export const cancelSheduledMeeting = async (userId, meetingId) => {
-	try {
-		const user = await UserModel.findOne({ _id: userId });
-		if (!user) {
-			return {
-				status: 404,
-				message: "User not found",
-			};
-		}
+// Below Code Not Updated
 
-		// Check if user has meeting token and if it is expired or not
-		const currentTime = new Date();
-		let accessToken = user.meetingToken?.access_token;
-		let refreshToken = user.meetingToken?.refresh_token;
-		let expireIn = user.meetingToken?.expire_in;
+// Unauthenticated route
+// export const getSchedulePageData = async (username, eventId) => {
+// 	try {
+// 		// Find the user by username
+// 		const user = await UserModel.findOne({ userName: username });
 
-		if (expireIn && isAfter(currentTime, new Date(expireIn))) {
-			// Token is expired, use refresh token to get a new access token
-			const oAuth2Client = new google.auth.OAuth2(
-				process.env.GOOGLE_CLIENT_ID,
-				process.env.GOOGLE_CLIENT_SECRET,
-				process.env.GOOGLE_REDIRECT_URI
-			);
+// 		// Check if user was found
+// 		if (!user) {
+// 			return {
+// 				status: 404,
+// 				message: "User  not found",
+// 			};
+// 		}
 
-			oAuth2Client.setCredentials({ refresh_token: refreshToken });
+// 		// Find the user's availability
+// 		const availability = await AvailabilityModel.findOne({ userId: user._id });
 
-			const { credentials } = await oAuth2Client.refreshAccessToken();
-			accessToken = credentials.access_token;
+// 		// Check if availability was found
+// 		if (!availability) {
+// 			return {
+// 				status: 404,
+// 				message: "Availability not found for the user",
+// 			};
+// 		}
 
-			// Get the current time in the specified time zone
-			const expireTime = addMinutes(currentTime, 50); // Add 50 minutes to current time
+// 		// Find events associated with the user
+// 		const events = await EventModel.find({ _id: eventId, userId: user._id });
 
-			// Format the expiration time in the desired time zone (Asia/Kolkata)
-			const formattedExpireTime = formatInTimeZone(
-				expireTime,
-				"Asia/Kolkata",
-				"yyyy-MM-dd'T'HH:mm:ss" // Format without offset
-			);
+// 		// Check if events were found
+// 		if (!events || events.length === 0) {
+// 			return {
+// 				status: 404,
+// 				message: "No events found for the user",
+// 			};
+// 		}
 
-			// Update the user's meeting token with the new access token and reset the expiration time
-			user.meetingToken.access_token = accessToken;
-			user.meetingToken.expire_in = formattedExpireTime; // Store the formatted expiration time
-			await user.save();
-		}
+// 		// Return the gathered data
+// 		return {
+// 			status: 200,
+// 			message: "Schedule page data retrieved successfully",
+// 			data: {
+// 				user: user,
+// 				availability: availability,
+// 				events: events,
+// 			},
+// 		};
+// 	} catch (error) {
+// 		console.error("Error getting schedule page data:", error);
+// 		return {
+// 			status: 500,
+// 			message: "An error occurred while getting schedule page data.",
+// 		};
+// 	}
+// };
 
-		// Set the credentials for the OAuth2 client
-		oAuth2Client.setCredentials({ access_token: accessToken });
+// function convertToDateObject(dateString) {
+// 	// Get current year
+// 	const currentYear = new Date().getFullYear();
 
-		const meeting = await BookingModel.findOne({
-			_id: meetingId,
-			userId: user._id,
-		});
-		const event = await EventModel.findOne({
-			userId: user._id,
-			bookings: meetingId,
-		});
-		if (!meeting) {
-			return {
-				status: 404,
-				message: "Meeting not found",
-			};
-		}
+// 	// Parse the month and day
+// 	const [month, day] = dateString.split(" ");
 
-		// Cancel the meeting in Google Calendar
-		const calendar = google.calendar({
-			version: "v3",
-			auth: oAuth2Client,
-		});
+// 	// Create a mapping of month names to month indices
+// 	const monthMap = {
+// 		January: 0,
+// 		February: 1,
+// 		March: 2,
+// 		April: 3,
+// 		May: 4,
+// 		June: 5,
+// 		July: 6,
+// 		August: 7,
+// 		September: 8,
+// 		October: 9,
+// 		November: 10,
+// 		December: 11,
+// 	};
 
-		await calendar.events.delete({
-			calendarId: "primary",
-			eventId: meeting.googleEventId,
-		});
+// 	// Convert month name to month index
+// 	const monthIndex = monthMap[month];
 
-		// Delete the meeting from the database
-		await EventModel.findByIdAndUpdate(event._id, {
-			$pull: { bookings: meetingId },
-		});
-		const response = await BookingModel.findOneAndDelete({
-			_id: meetingId,
-			userId: user._id,
-		});
+// 	// Create and return the date object
+// 	return new Date(currentYear, monthIndex, parseInt(day));
+// }
 
-		return {
-			status: 200,
-			message: "Scheduled meeting deleted successfully",
-			data: response,
-		};
-	} catch (error) {
-		console.error("Error cancelling scheduled meeting:", error);
-		return {
-			status: 500,
-			message: "An error occurred while cancelling scheduled meeting.",
-		};
-	}
-};
+// export const getEventsByUsername = async (username) => {
+// 	try {
+// 		const user = await UserModel.findOne({ userName: username });
+// 		if (!user) {
+// 			return {
+// 				status: 404,
+// 				message: "User  not found",
+// 			};
+// 		}
+// 		const response = await EventModel.find({ userId: user._id });
+// 		return {
+// 			status: 200,
+// 			message: "Events retrieved successfully",
+// 			data: response,
+// 		};
+// 	} catch (error) {
+// 		console.error("Error getting events by username:", error);
+// 		return {
+// 			status: 500,
+// 			message: "An error occurred while getting events by username.",
+// 		};
+// 	}
+// };
 
-export const getEventsByUsername = async (username) => {
-	try {
-		const user = await UserModel.findOne({ userName: username });
-		if (!user) {
-			return {
-				status: 404,
-				message: "User  not found",
-			};
-		}
-		const response = await EventModel.find({ userId: user._id });
-		return {
-			status: 200,
-			message: "Events retrieved successfully",
-			data: response,
-		};
-	} catch (error) {
-		console.error("Error getting events by username:", error);
-		return {
-			status: 500,
-			message: "An error occurred while getting events by username.",
-		};
-	}
-};
-
-export const getEventsByOnelink = async (onelinkId) => {
-	try {
-		const user = await UserModel.findOne({ oneLinkId: onelinkId });
-		if (!user) {
-			return {
-				status: 404,
-				message: "User  not found",
-			};
-		}
-		// console.log("userId", user._id);
-		const response = (await EventModel.find({ userId: user._id })).filter(
-			(event) => event.eventType === "Pitch Day"
-		);
-		// console.log("Pitch Day Events", response);
-		return {
-			status: 200,
-			message: "Events retrieved successfully",
-			data: response,
-		};
-	} catch (error) {
-		console.error("Error getting events by onelink:", error);
-		return {
-			status: 500,
-			message: "An error occurred while getting events by onelink.",
-		};
-	}
-};
+// export const getEventsByOnelink = async (onelinkId) => {
+// 	try {
+// 		const user = await UserModel.findOne({ oneLinkId: onelinkId });
+// 		if (!user) {
+// 			return {
+// 				status: 404,
+// 				message: "User  not found",
+// 			};
+// 		}
+// 		// console.log("userId", user._id);
+// 		const response = (await EventModel.find({ userId: user._id })).filter(
+// 			(event) => event.eventType === "Pitch Day"
+// 		);
+// 		// console.log("Pitch Day Events", response);
+// 		return {
+// 			status: 200,
+// 			message: "Events retrieved successfully",
+// 			data: response,
+// 		};
+// 	} catch (error) {
+// 		console.error("Error getting events by onelink:", error);
+// 		return {
+// 			status: 500,
+// 			message: "An error occurred while getting events by onelink.",
+// 		};
+// 	}
+// };

@@ -7,12 +7,12 @@ import {
 	createEventController,
 	getEventsController,
 	deleteEventController,
-	getSchedulePageDataController,
+	// getSchedulePageDataController,
 	scheduleMeetingController,
 	cancelSheduledMeetingController,
 	getALLScheduledMeetings,
-	getEventsByUsernameController,
-	getEventsByOnelinkController,
+	// getEventsByUsernameController,
+	// getEventsByOnelinkController,
 	createPaymentSessionController,
 	paymentVerifyController,
 } from "../controllers/meetingController.js";
@@ -20,27 +20,23 @@ import {
 const router = express.Router();
 // {baseUrl}/meetings/
 // http://localhost:8080/meetings/
-router.get("/getEvents/:username", getEventsByUsernameController);
-router.get("/getEventsByOnelinkId/:onelinkId", getEventsByOnelinkController);
+// router.get("/getEvents/:username", getEventsByUsernameController);
+// router.get("/getEventsByOnelinkId/:onelinkId", getEventsByOnelinkController);
+// router.get(
+// 	"/getSchedulePageData/:username/:eventId",
+// 	getSchedulePageDataController
+// );
+
 router.post("/scheduleMeeting", scheduleMeetingController);
 router.post("/createPaymentSession", createPaymentSessionController);
 router.post("/verifyPayment", paymentVerifyController);
-router.get(
-	"/getSchedulePageData/:username/:eventId",
-	getSchedulePageDataController
-);
 
 // Authorized routes below
 router.use(authenticateToken);
 router.post("/updateAvailability", updateAvaibilityController);
 router.post("/createEvent", createEventController);
-// For getting user specific events
-router.get("/getEvents", getEventsController);
+router.get("/getEvents", getEventsController); // For getting user specific events
 router.delete("/deleteEvent/:eventId", deleteEventController);
-
-// for fetching user, event and user availability
-
-// for schedulling meeting
 router.delete(
 	"/cancelScheduledMeeting/:meetingId",
 	cancelSheduledMeetingController
