@@ -8,6 +8,7 @@ import { google } from "googleapis";
 import crypto from "crypto";
 import { Cashfree } from "cashfree-pg";
 import { v4 as uuidv4 } from "uuid";
+import { url } from "inspector";
 
 Cashfree.XClientId = process.env.CASHFREE_CLIENT_ID;
 Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
@@ -119,23 +120,37 @@ export const getEvents = async (userId) => {
 		if (!user) {
 			return {
 				status: false,
-				message: "User not found",
+				message: "User  not found",
 			};
 		}
 
 		const response = await EventModel.find({ userId: user._id });
 
-		if (!response) {
+		if (!response || response.length === 0) {
 			return {
 				status: false,
-				message: "An error occurred while getting events.",
+				message: "No events found for this user.",
 			};
 		}
+
+		// Filter out events with event type "Pitch Day"
+		const data = response
+			.filter((event) => event.eventType !== "Pitch Day")
+			.map((event) => ({
+				_id: event._id,
+				title: event.title,
+				duration: event.duration.toString(),
+				price: event.price.toString(),
+				discount: event.discount.toString(),
+				url: `https://thecapitalhub.in/meeting/schedule/${user.userName}/${event._id}`,
+				// description: event.description,
+				// eventType: event.eventType,
+			}));
 
 		return {
 			status: true,
 			message: "Events retrieved successfully",
-			data: response,
+			data: data,
 		};
 	} catch (error) {
 		console.error("Error getting events:", error);
@@ -171,10 +186,21 @@ export const deleteEvent = async (userId, eventId) => {
 			};
 		}
 
+		const deletedEvent = {
+			_id: response._id,
+			title: response.title,
+			duration: response.duration.toString(),
+			price: response.price.toString(),
+			discount: response.discount.toString(),
+			url: `https://thecapitalhub.in/meeting/schedule/${user.userName}/${response._id}`,
+			// description: response.description,
+			// eventType: response.eventType,
+		};
+
 		return {
 			status: true,
 			message: "Event deleted successfully",
-			data: response,
+			data: deletedEvent,
 		};
 	} catch (error) {
 		console.error("Error deleting event:", error);
