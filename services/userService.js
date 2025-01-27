@@ -143,6 +143,26 @@ export const getUserById = async (userId) => {
     }
     user.password = undefined;
 
+    // Format education and experience data
+    const formattedEducation = user.recentEducation.map(edu => ({
+      educationLogo: edu.logo || "https://res.cloudinary.com/drjt9guif/image/upload/v1737795495/undefined/startUps/logos/vnzjvdh52sd16mo6rge7.webp",
+      educationSchool: edu.schoolName || "",
+      educationLocation: edu.location || "",
+      educationCourse: edu.course || "",
+      educationPassoutDate: edu.passoutYear ? new Date(edu.passoutYear).getFullYear() : "",
+      educationDescription: edu.description || "",
+    }));
+
+    const formattedExperience = user.recentExperience.map(exp => ({
+      companyLogo: exp.logo || "https://res.cloudinary.com/drjt9guif/image/upload/v1737795495/undefined/startUps/logos/tjuzpjghxiyarfwihzkh.webp",
+      companyName: exp.companyName || "",
+      companyLocation: exp.location || "",
+      companyRole: exp.role || "",
+      companyDescription: exp.description || "",
+      companyStartDate: exp.experienceDuration.startYear ? new Date(exp.experienceDuration.startYear).getFullYear() : "",
+      companyEndDate: exp.experienceDuration.endYear ? new Date(exp.experienceDuration.endYear).getFullYear() : "",
+    }));
+
     // Calculate document completion
     let documentsCount = 0;
       try {
@@ -217,8 +237,8 @@ export const getUserById = async (userId) => {
       companyName: user.startUp?.company || user.investor?.companyName || "",
       location: user.startUp?.location || user.investor?.location || "",
       bio: user.bio || "",
-      education: user.education || "",
-      experience: user.experience || "",
+      education: formattedEducation,
+      experience: formattedExperience,
       connectionsCount: user.connections?.length || 0,
       followersCount: user.connectionsReceived?.length || 0,
       isSubscribed: user.isSubscribed || false,
@@ -561,9 +581,9 @@ export const updateUserData = async ({ userId, newData }) => {
     // Handle multiple experience updates
     if (newData.experiences && Array.isArray(newData.experiences)) {
       const experiencePromises = newData.experiences.map(async (exp) => {
-        // Handle company logo upload
-        let companyLogo = null;
-        if (exp.companyLogo) {
+        // Handle company logo upload only if it's not an HTTPS URL
+        let companyLogo = exp.companyLogo;
+        if (exp.companyLogo && !exp.companyLogo.startsWith('https://')) {
           const imageBuffer = base64ToBuffer(exp.companyLogo);
           const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
           const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
@@ -595,9 +615,9 @@ export const updateUserData = async ({ userId, newData }) => {
     // Handle multiple education updates
     if (newData.educations && Array.isArray(newData.educations)) {
       const educationPromises = newData.educations.map(async (edu) => {
-        // Handle education logo upload
-        let educationLogo = null;
-        if (edu.educationLogo) {
+        // Handle education logo upload only if it's not an HTTPS URL
+        let educationLogo = edu.educationLogo;
+        if (edu.educationLogo && !edu.educationLogo.startsWith('https://')) {
           const imageBuffer = base64ToBuffer(edu.educationLogo);
           const imageBase64 = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`; 
           const { secure_url } = await cloudinary.uploader.upload(imageBase64, {
@@ -624,7 +644,8 @@ export const updateUserData = async ({ userId, newData }) => {
     }
 
     await user.save();
-    return { status: true, message: "User updated successfully", data: user };
+    const userData = await getUserById(userId);
+    return { status: true, message: "User updated successfully", data: userData };
   } catch (error) {
     console.error("Error updating user:", error);
     return { status: false, message: error.message, data: {} };
