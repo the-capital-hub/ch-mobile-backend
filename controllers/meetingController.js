@@ -45,7 +45,7 @@ export const getEventsController = async (req, res) => {
 	try {
 		const { userId } = req;
 		const response = await getEvents(userId);
-		res.status(response.status).send(response);
+		res.send(response);
 	} catch (error) {
 		console.error(error);
 		res.send({
