@@ -139,7 +139,7 @@ export const getEvents = async (userId) => {
 			.map((event) => ({
 				_id: event._id,
 				title: event.title,
-				duration: event.duration.toString(),
+				duration: convertDurationToString(event.duration),
 				price: event.price.toString(),
 				discount: event.discount.toString(),
 				url: `https://thecapitalhub.in/meeting/schedule/${user.userName}/${event._id}`,
@@ -211,6 +211,40 @@ export const deleteEvent = async (userId, eventId) => {
 	}
 };
 
+function convertDateFormat(dateString) {
+	// Create a new Date object from the input string
+	const date = new Date(dateString);
+
+	// Extract the day, month, year, hours, and minutes
+	const day = String(date.getDate()).padStart(2, "0");
+	const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+	const year = date.getFullYear();
+
+	// Get hours and minutes
+	let hours = date.getHours();
+	const minutes = String(date.getMinutes()).padStart(2, "0");
+
+	// Determine AM/PM suffix
+	const ampm = hours >= 12 ? "PM" : "AM";
+	hours = hours % 12; // Convert to 12-hour format
+	hours = hours ? String(hours) : "12"; // the hour '0' should be '12'
+
+	// Format the final string
+	const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes} ${ampm}`;
+
+	return formattedDate;
+}
+
+function convertDurationToString(duration) {
+	// Check if the duration is a valid number
+	if (typeof duration !== "number" || duration < 0) {
+		return "Invalid duration";
+	}
+
+	// Return the formatted string
+	return `${duration} Minute${duration !== 1 ? "s" : ""}`;
+}
+
 export const getAllSheduledMeeting = async (userId) => {
 	try {
 		const user = await UserModel.findOne({ _id: userId });
@@ -227,10 +261,23 @@ export const getAllSheduledMeeting = async (userId) => {
 
 		// console.log("meetings", response);
 
+		const data = response.map((meeting) => ({
+			_id: meeting._id,
+			title: meeting.title,
+			name: meeting.name,
+			email: meeting.email,
+			paymentAmount: meeting.paymentAmount.toString(),
+			description: meeting.additionalInfo,
+			startTime: convertDateFormat(meeting.startTime),
+			endTime: convertDateFormat(meeting.endTime),
+			meetingLink: meeting.meetingLink,
+			duration: convertDurationToString(meeting.eventId.duration),
+		}));
+
 		return {
 			status: true,
 			message: "Scheduled meetings retrieved successfully",
-			data: response,
+			data: data,
 		};
 	} catch (error) {
 		console.error("Error getting scheduled meetings:", error);
@@ -327,7 +374,18 @@ export const cancelSheduledMeeting = async (userId, meetingId) => {
 		return {
 			status: true,
 			message: "Scheduled meeting deleted successfully",
-			data: response,
+			data: {
+				_id: response._id,
+				title: response.title,
+				name: response.name,
+				email: response.email,
+				paymentAmount: response.paymentAmount,
+				description: response.additionalInfo,
+				startTime: convertDateFormat(response.startTime),
+				endTime: convertDateFormat(response.endTime),
+				meetingLink: response.meetingLink,
+				duration: response.eventId.duration.toString(),
+			},
 		};
 	} catch (error) {
 		console.error("Error cancelling scheduled meeting:", error);
