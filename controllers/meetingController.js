@@ -2,11 +2,11 @@ import {
 	updateAvailability,
 	createEvent,
 	getEvents,
-	deleteEvent,
+	disableEvent,
 	// getSchedulePageData,
 	scheduleMeeting,
 	cancelSheduledMeeting,
-	getAllSheduledMeeting,
+	getAllScheduledMeeting,
 	// getEventsByUsername,
 	// getEventsByOnelink,
 	createPaymentSession,
@@ -55,17 +55,17 @@ export const getEventsController = async (req, res) => {
 	}
 };
 
-export const deleteEventController = async (req, res) => {
+export const disableEventController = async (req, res) => {
 	try {
 		const { userId } = req;
 		const { eventId } = req.params;
-		const response = await deleteEvent(userId, eventId);
+		const response = await disableEvent(userId, eventId);
 		res.send(response);
 	} catch (error) {
 		console.error(error);
 		res.send({
 			status: false,
-			message: "An error occurred while updating availability.",
+			message: "An error occurred while disabling event.",
 		});
 	}
 };
@@ -73,7 +73,9 @@ export const deleteEventController = async (req, res) => {
 export const getALLScheduledMeetings = async (req, res) => {
 	try {
 		const { userId } = req;
-		const response = await getAllSheduledMeeting(userId);
+		const { meetingType } = req.params;
+		console.log("meetingType", meetingType);
+		const response = await getAllScheduledMeeting(userId, meetingType);
 		res.send(response);
 	} catch (error) {
 		res.send({

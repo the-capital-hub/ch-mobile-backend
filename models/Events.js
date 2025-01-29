@@ -6,6 +6,10 @@ const eventSchema = new mongoose.Schema(
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Users",
 		},
+		isActive: {
+			type: Boolean,
+			default: true,
+		},
 		title: {
 			type: String,
 			required: true,

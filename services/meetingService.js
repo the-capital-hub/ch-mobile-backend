@@ -161,7 +161,7 @@ export const getEvents = async (userId) => {
 	}
 };
 
-export const deleteEvent = async (userId, eventId) => {
+export const disableEvent = async (userId, eventId) => {
 	try {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
@@ -170,43 +170,43 @@ export const deleteEvent = async (userId, eventId) => {
 				message: "User not found",
 			};
 		}
-		await UserModel.findByIdAndUpdate(user._id, {
-			$pull: { eventId: eventId },
-		});
 
-		const response = await EventModel.findOneAndDelete({
-			userId: user._id,
-			_id: eventId,
-		});
+		// update the isActive field to false
+		const response = await EventModel.findOneAndUpdate(
+			{ _id: eventId, userId: user._id },
+			{ $set: { isActive: false } },
+			{ new: true }
+		);
 
 		if (!response) {
 			return {
 				status: false,
-				message: "An error occurred while deleting event.",
+				message: "An error occurred while disabling event.",
 			};
 		}
 
-		const deletedEvent = {
+		const deletedEventData = {
 			_id: response._id,
 			title: response.title,
 			duration: response.duration.toString(),
 			price: response.price.toString(),
 			discount: response.discount.toString(),
 			url: `https://thecapitalhub.in/meeting/schedule/${user.userName}/${response._id}`,
+			isActive: response.isActive,
 			// description: response.description,
 			// eventType: response.eventType,
 		};
 
 		return {
 			status: true,
-			message: "Event deleted successfully",
-			data: deletedEvent,
+			message: "Event disabled successfully",
+			data: deletedEventData,
 		};
 	} catch (error) {
-		console.error("Error deleting event:", error);
+		console.error("Error in disabling event:", error);
 		return {
 			status: false,
-			message: "An error occurred while deleting event.",
+			message: "An error occurred while disabling event.",
 		};
 	}
 };
@@ -245,7 +245,62 @@ function convertDurationToString(duration) {
 	return `${duration} Minute${duration !== 1 ? "s" : ""}`;
 }
 
-export const getAllSheduledMeeting = async (userId) => {
+// export const getAllSheduledMeeting = async (userId, meetingType) => {
+// 	try {
+// 		const user = await UserModel.findOne({ _id: userId });
+// 		if (!user) {
+// 			return {
+// 				status: false,
+// 				message: "User  not found",
+// 			};
+// 		}
+
+// 		const response = await BookingModel.find({ userId: user._id })
+// 			.populate("userId")
+// 			.populate("eventId");
+
+// 		// Get the current date for comparison
+// 		const currentDate = new Date();
+
+// 		// Map and filter the meetings based on meetingType
+// 		const data = response
+// 			.map((meeting) => ({
+// 				_id: meeting._id,
+// 				title: meeting.title,
+// 				name: meeting.name,
+// 				email: meeting.email,
+// 				paymentAmount: meeting.paymentAmount.toString(),
+// 				description: meeting.additionalInfo,
+// 				startTime: convertDateFormat(meeting.startTime),
+// 				endTime: convertDateFormat(meeting.endTime),
+// 				meetingLink: meeting.meetingLink,
+// 				duration: convertDurationToString(meeting.eventId.duration),
+// 			}))
+// 			.filter((meeting) => {
+// 				const meetingStartTime = new Date(meeting.startTime);
+// 				if (meetingType === "upcoming") {
+// 					return meetingStartTime > currentDate; // Keep only upcoming meetings
+// 				} else if (meetingType === "past") {
+// 					return meetingStartTime <= currentDate; // Keep only past meetings
+// 				}
+// 				return true; // If no valid meetingType is provided, return all meetings
+// 			});
+
+// 		return {
+// 			status: true,
+// 			message: `Scheduled ${meetingType} meetings retrieved successfully`,
+// 			data: data,
+// 		};
+// 	} catch (error) {
+// 		console.error("Error getting scheduled meetings:", error);
+// 		return {
+// 			status: false,
+// 			message: "An error occurred while getting scheduled meetings.",
+// 		};
+// 	}
+// };
+
+export const getAllScheduledMeeting = async (userId, meetingType) => {
 	try {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
@@ -254,29 +309,53 @@ export const getAllSheduledMeeting = async (userId) => {
 				message: "User  not found",
 			};
 		}
-		// console.log("userId", user._id);
+
 		const response = await BookingModel.find({ userId: user._id })
 			.populate("userId")
 			.populate("eventId");
 
-		// console.log("meetings", response);
+		// Get the current date for comparison
+		const currentDate = new Date();
 
-		const data = response.map((meeting) => ({
+		// Validate meetingType
+		const validMeetingTypes = ["upcoming", "past"];
+		if (meetingType && !validMeetingTypes.includes(meetingType)) {
+			return {
+				status: false,
+				message: "Invalid meeting type provided.",
+			};
+		}
+
+		// Filter the meetings based on meetingType
+		const filteredMeetings = response.filter((meeting) => {
+			const meetingStartTime = new Date(meeting.startTime);
+			if (meetingType === "upcoming") {
+				return meetingStartTime > currentDate; // Keep only upcoming meetings
+			} else if (meetingType === "past") {
+				return meetingStartTime <= currentDate; // Keep only past meetings
+			}
+			return true; // If no valid meetingType is provided, return all meetings
+		});
+
+		// Map the filtered meetings to the desired format
+		const data = filteredMeetings.map((meeting) => ({
 			_id: meeting._id,
 			title: meeting.title,
 			name: meeting.name,
 			email: meeting.email,
 			paymentAmount: meeting.paymentAmount.toString(),
 			description: meeting.additionalInfo,
-			startTime: convertDateFormat(meeting.startTime),
-			endTime: convertDateFormat(meeting.endTime),
+			startTime: convertDateFormat(meeting.startTime), // Assuming this function returns a formatted string
+			endTime: convertDateFormat(meeting.endTime), // Assuming this function returns a formatted string
 			meetingLink: meeting.meetingLink,
 			duration: convertDurationToString(meeting.eventId.duration),
 		}));
 
 		return {
 			status: true,
-			message: "Scheduled meetings retrieved successfully",
+			message: `Scheduled ${
+				meetingType || "all"
+			} meetings retrieved successfully`,
 			data: data,
 		};
 	} catch (error) {
