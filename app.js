@@ -29,6 +29,7 @@ import vcRoutes from "./routes/vcRoute.js";
 import newsRouter from "./routes/newsRoutes.js";
 import meetingsRoutes from "./routes/meetingsRoutes.js";
 import webinarRoutes from "./routes/WebinarsRoutes.js";
+import priorityDM from "./routes/priorityDMRoutes.js";
 
 const allowedOrigins = [
 	"http://localhost:3000",
@@ -64,6 +65,7 @@ app.use("/vc", vcRoutes);
 app.use("/news", newsRouter);
 app.use("/meetings", meetingsRoutes);
 app.use("/webinars", webinarRoutes);
+app.use("/priorityDM", priorityDM);
 // documentation upload
 
 const storage = multer.diskStorage({
