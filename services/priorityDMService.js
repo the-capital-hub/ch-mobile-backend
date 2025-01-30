@@ -134,7 +134,7 @@ export const createPaymentSession = async (data) => {
 
 		return {
 			status: true,
-      message: "Payment session created successfully",
+			message: "Payment session created successfully",
 			data: response.data,
 		};
 	} catch (error) {
@@ -210,7 +210,7 @@ export const verifyPayment = async (req, res) => {
 
 			return {
 				status: true,
-        message: "Payment verified successfully",
+				message: "Payment verified successfully",
 				data: {
 					orderId,
 					paymentId: payment.cf_payment_id,
@@ -327,13 +327,24 @@ const sendFounderNotification = async (founder, user, question) => {
 
 export const getPriorityDMForUser = async (userId) => {
 	try {
-		const priorityDM = await PriorityModel.find({ userId }).populate(
+		const priorityDM = await PriorityModel.findOne({ userId }).populate(
 			"founderId"
 		);
+
+		const data = {
+			FounderName:
+				priorityDM.founderId.firstName + " " + priorityDM.founderId.lastName,
+			FounderPic: priorityDM.founderId.profilePic,
+			FounderRating: priorityDM.founderId.rating || "4.5",
+			question: priorityDM.question,
+			answer: priorityDM.answer,
+			isAnswered: priorityDM.isAnswered,
+			payment: priorityDM.payment,
+		};
 		return {
 			status: true,
 			message: "Questions fetched successfully",
-			data: priorityDM,
+			data: data,
 		};
 	} catch (error) {
 		console.error("Error fetching priority DM:", error);
@@ -343,13 +354,23 @@ export const getPriorityDMForUser = async (userId) => {
 
 export const getPriorityDMForFounder = async (userId) => {
 	try {
-		const priorityDM = await PriorityModel.find({ founderId: userId }).populate(
-			"userId"
-		);
+		const priorityDM = await PriorityModel.findOne({
+			founderId: userId,
+		}).populate("userId");
+
+		const data = {
+			UserName: priorityDM.userId.firstName + " " + priorityDM.userId.lastName,
+			UserPic: priorityDM.userId.profilePic,
+			UserRating: priorityDM.userId.rating || "4.5",
+			question: priorityDM.question,
+			answer: priorityDM.answer,
+			isAnswered: priorityDM.isAnswered,
+			payment: priorityDM.payment,
+		};
 		return {
 			status: true,
 			message: "Questions fetched successfully",
-			data: priorityDM,
+			data: data,
 		};
 	} catch (error) {
 		console.error("Error fetching priority DM:", error);
@@ -377,10 +398,20 @@ export const updatePriorityDM = async (id, userId, data) => {
 
 		await sendAnswerSuccessNotification(priorityDM.userId, data.answer);
 
+		const data = {
+			UserName: priorityDM.userId.firstName + " " + priorityDM.userId.lastName,
+			UserPic: priorityDM.userId.profilePic,
+			UserRating: priorityDM.userId.rating || "4.5",
+			question: priorityDM.question,
+			answer: priorityDM.answer,
+			isAnswered: priorityDM.isAnswered,
+			payment: priorityDM.payment,
+		};
+
 		return {
 			status: true,
 			message: "Priority DM updated successfully",
-			data: priorityDM,
+			data: data,
 		};
 	} catch (error) {
 		console.error("Error updating priority DM:", error);
@@ -414,10 +445,24 @@ export const getQuestionById = async (userId, questionId) => {
 		})
 			.populate("founderId")
 			.populate("userId");
+
+		const data = {
+			FounderName:
+				question.founderId.firstName + " " + question.founderId.lastName,
+			FounderPic: question.founderId.profilePic,
+			FounderRating: question.founderId.rating || "4.5",
+			UserName: question.userId.firstName + " " + question.userId.lastName,
+			UserPic: question.userId.profilePic,
+			UserRating: question.userId.rating || "4.5",
+			question: question.question,
+			answer: question.answer,
+			isAnswered: question.isAnswered,
+			payment: question.payment,
+		};
 		return {
 			status: true,
 			message: "Question fetched successfully",
-			data: question,
+			data: data,
 		};
 	} catch (error) {
 		console.error("Error fetching question:", error);
