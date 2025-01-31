@@ -8,13 +8,17 @@ import {
 	getPriorityDMForFounderController,
 	updatePriorityDMController,
 	getPriorityDMByIdController,
+	sentPriorityDMForUserController,
 } from "../controllers/priorityDMController.js";
 
 const router = express.Router();
 // http://localhost:8080/priorityDM/
 // payments routes
+
+// for adding data to priorityDM database
 router.post("/createPaymentSession", createPaymentSessionController);
 router.post("/verifyPayment", paymentVerifyController);
+router.post("/sentPriorityDM", sentPriorityDMForUserController);
 
 // Authorized routes below
 router.use(authenticateToken);

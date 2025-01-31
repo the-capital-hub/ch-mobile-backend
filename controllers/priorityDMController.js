@@ -1,6 +1,7 @@
 import {
 	createPaymentSession,
 	verifyPayment,
+	sentPriorityDM,
 	getPriorityDMForUser,
 	getPriorityDMForFounder,
 	updatePriorityDM,
@@ -29,6 +30,20 @@ export const paymentVerifyController = async (req, res) => {
 		res.send({
 			status: false,
 			message: "An error occurred while verifying payment.",
+		});
+	}
+};
+
+export const sentPriorityDMForUserController = async (req, res) => {
+	try {
+		// const { userId } = req;
+		const response = await sentPriorityDM(req.body);
+		res.send(response);
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: "An error occurred while sending priority DM.",
 		});
 	}
 };
