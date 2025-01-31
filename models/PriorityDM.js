@@ -28,6 +28,7 @@ const prioritySchema = new mongoose.Schema(
 		},
 		answer: {
 			type: String,
+			default: "",
 		},
 		isAnswered: {
 			type: Boolean,

@@ -238,6 +238,51 @@ export const verifyPayment = async (req, res) => {
 	}
 };
 
+export const sentPriorityDM = async (data) => {
+	try {
+		const { name, email, mobile, question, founderUserName } = data;
+
+		// Find founder
+		const founder = await UserModel.findOne({ userName: founderUserName });
+		if (!founder) {
+			throw new Error("Founder not found");
+		}
+
+		// Find or create user
+		let user = await UserModel.findOne({ email });
+
+		if (!user) {
+			user = await createNewUser(name, email, mobile);
+			// Send registration email
+			await sendRegistrationEmail(user);
+		}
+
+		// Create priority DM
+		const priorityDM = await PriorityModel.create({
+			name: `${user.firstName} ${user.lastName}`,
+			email: user.email,
+			mobile: user.phoneNumber,
+			question,
+			answer: "",
+			founderId: founder._id,
+			userId: user._id,
+		});
+
+		// Send confirmation emails
+		// await sendPriorityDMConfirmation(user, payment.order_amount);
+		await sendFounderNotification(founder, user, question);
+
+		return {
+			status: true,
+			message: "Priority DM sent successfully",
+			data: priorityDM,
+		};
+	} catch (error) {
+		console.error("Error in sending priority DM:", error);
+		throw new Error(error.message);
+	}
+};
+
 // Helper Functions
 const createNewUser = async (name, email, mobile) => {
 	const { firstName, lastName } = extractNames(name);
@@ -327,11 +372,11 @@ const sendFounderNotification = async (founder, user, question) => {
 
 export const getPriorityDMForUser = async (userId) => {
 	try {
-		const priorityDM = await PriorityModel.findOne({ userId }).populate(
+		const priorityDM = await PriorityModel.find({ userId }).populate(
 			"founderId"
 		);
 
-		const data = {
+		const data = priorityDM.map((priorityDM) => ({
 			FounderName:
 				priorityDM.founderId.firstName + " " + priorityDM.founderId.lastName,
 			FounderPic: priorityDM.founderId.profilePic,
@@ -340,7 +385,7 @@ export const getPriorityDMForUser = async (userId) => {
 			answer: priorityDM.answer,
 			isAnswered: priorityDM.isAnswered,
 			payment: priorityDM.payment,
-		};
+		}));
 		return {
 			status: true,
 			message: "Questions fetched successfully",
@@ -354,11 +399,11 @@ export const getPriorityDMForUser = async (userId) => {
 
 export const getPriorityDMForFounder = async (userId) => {
 	try {
-		const priorityDM = await PriorityModel.findOne({
+		const priorityDM = await PriorityModel.find({
 			founderId: userId,
 		}).populate("userId");
 
-		const data = {
+		const data = priorityDM.map((priorityDM) => ({
 			UserName: priorityDM.userId.firstName + " " + priorityDM.userId.lastName,
 			UserPic: priorityDM.userId.profilePic,
 			UserRating: priorityDM.userId.rating || "4.5",
@@ -366,7 +411,7 @@ export const getPriorityDMForFounder = async (userId) => {
 			answer: priorityDM.answer,
 			isAnswered: priorityDM.isAnswered,
 			payment: priorityDM.payment,
-		};
+		}));
 		return {
 			status: true,
 			message: "Questions fetched successfully",
