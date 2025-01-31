@@ -27,9 +27,6 @@ const availabilitySchema = new Schema(
 				endTime: {
 					type: String,
 				},
-				// enabled: {
-				// 	type: Boolean,
-				// },
 			},
 		],
 		minimumGap: {
