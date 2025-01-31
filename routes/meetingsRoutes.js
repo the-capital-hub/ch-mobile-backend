@@ -3,6 +3,7 @@ import express from "express";
 import { authenticateToken } from "../middlewares/authenticateToken.js";
 
 import {
+	getAvaibilityController,
 	updateAvaibilityController,
 	createEventController,
 	getEventsController,
@@ -33,6 +34,7 @@ router.post("/verifyPayment", paymentVerifyController);
 
 // Authorized routes below
 router.use(authenticateToken);
+router.get("/getAvailability", getAvaibilityController);
 router.post("/updateAvailability", updateAvaibilityController);
 router.post("/createEvent", createEventController);
 router.get("/getEvents", getEventsController); // For getting user specific events

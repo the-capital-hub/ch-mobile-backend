@@ -1,4 +1,5 @@
 import {
+	getAvailability,
 	updateAvailability,
 	createEvent,
 	getEvents,
@@ -12,6 +13,20 @@ import {
 	createPaymentSession,
 	verifyPayment,
 } from "../services/meetingService.js";
+
+export const getAvaibilityController = async (req, res) => {
+	try {
+		const { userId } = req;
+		const response = await getAvailability(userId, req.body);
+		res.send(response);
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: "An error occurred while updating availability.",
+		});
+	}
+};
 
 export const updateAvaibilityController = async (req, res) => {
 	try {
@@ -50,7 +65,7 @@ export const getEventsController = async (req, res) => {
 		console.error(error);
 		res.send({
 			status: false,
-			message: "An error occurred while updating availability.",
+			message: "An error occurred while fetching events.",
 		});
 	}
 };

@@ -21,9 +21,35 @@ const oAuth2Client = new OAuth2(
 	"https://thecapitalhub.in/investor/onelink"
 );
 
+export const getAvailability = async (userId) => {
+	try {
+		const response = await AvailabilityModel.findOne({ userId: userId });
+
+		const data = {
+			minimumGap: convertDurationToString(response.minimumGap),
+			dayAvailability: response.dayAvailability.map((day) => ({
+				day: day.day,
+				startTime: day.startTime,
+				endTime: day.endTime,
+			})),
+		};
+
+		return {
+			status: true,
+			message: "Availability fetched successfully",
+			data: data,
+		};
+	} catch (error) {
+		return {
+			status: false,
+			message: "Error fetching availability",
+			error: error.message,
+		};
+	}
+};
+
 export const updateAvailability = async (userId, data) => {
-	console.log(userId);
-	console.log(data);
+
 	try {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
@@ -34,21 +60,19 @@ export const updateAvailability = async (userId, data) => {
 		}
 		console.log(user);
 
-		// Convert day names to lowercase to match the schema
 		const normalizedDayAvailability = data.dayAvailability.map((day) => ({
-			day: day.day.toLowerCase(), // Normalize to lowercase
-			startTime: day.start, // Change to match schema
-			endTime: day.end, // Change to match schema
-			// enabled: day.enabled,
+			day: day.day.toLowerCase(),
+			startTime: day.startTime,
+			endTime: day.endTime,
 		}));
 
 		const response = await AvailabilityModel.findOneAndUpdate(
-			{ userId: user._id }, // Ensure you're querying with userId
+			{ userId: user._id },
 			{
 				$set: {
 					userId: user._id,
 					dayAvailability: normalizedDayAvailability,
-					minimumGap: parseInt(data.minGap, 10), // Change to match schema
+					minimumGap: parseInt(data.minimumGap, 10),
 				},
 			},
 			{ upsert: true, new: true }
@@ -120,11 +144,14 @@ export const getEvents = async (userId) => {
 		if (!user) {
 			return {
 				status: false,
-				message: "User  not found",
+				message: "User not found",
 			};
 		}
 
-		const response = await EventModel.find({ userId: user._id });
+		const response = await EventModel.find({ userId: user._id }).populate({
+			path: "bookings",
+			select: "name email", // Only include the 'name' and 'email' fields
+		});
 
 		if (!response || response.length === 0) {
 			return {
@@ -138,13 +165,14 @@ export const getEvents = async (userId) => {
 			.filter((event) => event.eventType !== "Pitch Day")
 			.map((event) => ({
 				_id: event._id,
+				isActive: event.isActive,
 				title: event.title,
 				duration: convertDurationToString(event.duration),
 				price: event.price.toString(),
 				discount: event.discount.toString(),
 				url: `https://thecapitalhub.in/meeting/schedule/${user.userName}/${event._id}`,
-				// description: event.description,
-				// eventType: event.eventType,
+				bookings: event.bookings,
+				eventType: event.eventType,
 			}));
 
 		return {
