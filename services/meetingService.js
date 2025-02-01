@@ -27,6 +27,7 @@ export const getAvailability = async (userId) => {
 
 		const data = {
 			minimumGap: convertDurationToString(response.minimumGap),
+			minGap: response.minimumGap,
 			dayAvailability: response.dayAvailability.map((day) => ({
 				day: day.day,
 				startTime: day.startTime,
@@ -49,7 +50,6 @@ export const getAvailability = async (userId) => {
 };
 
 export const updateAvailability = async (userId, data) => {
-
 	try {
 		const user = await UserModel.findOne({ _id: userId });
 		if (!user) {
