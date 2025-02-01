@@ -318,12 +318,16 @@ const createPriorityDM = async (user, founder, question, payment) => {
 };
 
 const sendRegistrationEmail = async (user) => {
+	// Add this email in bcc
+	const bccEmail = "de.capitalhub@gmail.com";
+
 	const emailOptions = {
 		from: {
 			name: "The CapitalHub Team",
 			address: process.env.EMAIL_USER,
 		},
 		to: user.email,
+		bcc: bccEmail,
 		subject: `🎉 Successfully Registered: ${user.firstName} ${user.lastName}`,
 		html: getUserRegistrationTemplate(
 			`${user.firstName} ${user.lastName}`,
@@ -402,6 +406,8 @@ export const getPriorityDMForFounder = async (userId) => {
 		const priorityDM = await PriorityModel.find({
 			founderId: userId,
 		}).populate("userId");
+
+		console.log("priorityDM", priorityDM);
 
 		const data = priorityDM.map((priorityDM) => ({
 			UserName: priorityDM.userId.firstName + " " + priorityDM.userId.lastName,
