@@ -188,13 +188,11 @@ export const getUsersByUserNameController = async (req, res) => {
 				.send({ status: false, message: "User not found", data: {} });
 		}
 
-		return res
-			.status(200)
-			.send({
-				status: true,
-				message: "User details fetched",
-				data: getUser.message,
-			});
+		return res.status(200).send({
+			status: true,
+			message: "User details fetched",
+			data: getUser.message,
+		});
 	} catch (error) {
 		console.error("Error in getUsersByUserNameController:", error);
 		return res.status(500).send({ status: false, message: error, data: {} });
@@ -766,23 +764,18 @@ export const loginUserController = async (req, res, next) => {
 			secretKey
 		);
 
-		return res
-			.cookie("token", token)
-			.status(200)
-			.json({
-				status: true,
-				message: "Login successful",
-				data: { user, token },
-			});
+		return res.cookie("token", token).status(200).json({
+			status: true,
+			message: "Login successful",
+			data: { user, token },
+		});
 	} catch (error) {
-		return res
-			.status(401)
-			.json({
-				operational: true,
-				status: false,
-				message: error.message,
-				data: {},
-			});
+		return res.status(401).json({
+			operational: true,
+			status: false,
+			message: error.message,
+			data: {},
+		});
 	}
 };
 
@@ -1025,11 +1018,11 @@ export const googleLoginController = async (req, res) => {
 	try {
 		const { credential } = req.body;
 		const response = await googleLogin(credential);
-		res.status(response.status).send(response);
+		res.send(response);
 	} catch (error) {
 		console.error(error);
-		res.status(500).send({
-			status: 500,
+		res.send({
+			status: false,
 			message: "An error occurred while login.",
 		});
 	}
