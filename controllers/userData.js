@@ -1,34 +1,34 @@
 import jwt from "jsonwebtoken";
 import {
-  registerUserService,
-  getUsersService,
-  getUserByUserName,
-  loginUserService,
-  getUserById,
-  updateUserData,
-  updateUserById,
-  changePassword,
-  requestPasswordReset,
-  resetPassword,
-  searchUsers,
-  addEducation,
-  addExperience,
-  addStartupToUser,
-  addUserAsInvestor,
-  getExplore,
-  getExploreFilters,
-  validateSecretKey,
-  createSecretKey,
-  googleLogin,
-  updateEducation,
-  updateExperience,
-  deleteEducation,
-  deleteExperience,
-  getUserByIdBody,
-  getProfilePosts,
-  toggleUserBlockStatus,
-  getFounderProfilePageData,
-  addFounderEmailToCurrentUser,
+	registerUserService,
+	getUsersService,
+	getUserByUserName,
+	loginUserService,
+	getUserById,
+	updateUserData,
+	updateUserById,
+	changePassword,
+	requestPasswordReset,
+	resetPassword,
+	searchUsers,
+	addEducation,
+	addExperience,
+	addStartupToUser,
+	addUserAsInvestor,
+	getExplore,
+	getExploreFilters,
+	validateSecretKey,
+	createSecretKey,
+	googleLogin,
+	updateEducation,
+	updateExperience,
+	deleteEducation,
+	deleteExperience,
+	getUserByIdBody,
+	getProfilePosts,
+	toggleUserBlockStatus,
+	getFounderProfilePageData,
+	addFounderEmailToCurrentUser,
 } from "../services/userService.js";
 
 import { sendMail } from "../utils/mailHelper.js";
@@ -40,1083 +40,1127 @@ import xlsx from "xlsx";
 import axios from "axios";
 import { InvestorModel } from "../models/Investor.js";
 
-
 export const createUser = async (req, res) => {
-  try {
-    const file = req.file;
+	try {
+		const file = req.file;
 
-    if (!file) {
-      return res.status(400).send("No file uploaded.");
-    }
-    const generateUniqueOneLink = async (baseLink, model) => {
-      let uniqueLink = baseLink;
-      let count = 1;
-      while (await model.countDocuments({ oneLink: uniqueLink })) {
-        uniqueLink = baseLink + count++;
-      }
-      return uniqueLink;
-    };
-    // Read the file from disk using xlsx.readFile
-    const workbook = xlsx.readFile(file.path);
+		if (!file) {
+			return res.status(400).send("No file uploaded.");
+		}
+		const generateUniqueOneLink = async (baseLink, model) => {
+			let uniqueLink = baseLink;
+			let count = 1;
+			while (await model.countDocuments({ oneLink: uniqueLink })) {
+				uniqueLink = baseLink + count++;
+			}
+			return uniqueLink;
+		};
+		// Read the file from disk using xlsx.readFile
+		const workbook = xlsx.readFile(file.path);
 
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const jsonData = xlsx.utils.sheet_to_json(sheet);
-    const addUser = async (user) => {
-      const userData = await UserModel.create({
-        firstName: user.firstname,
-        lastName: user.lastName,
-        email: user.email,
-        phoneNumber: user.mobileNumber,
-        bio: user.bio,
-        gender: user.gender === "M" ? "Male" : "Female",
-        isInvestor: user.userType === "Investor" ? true : false,
-        linkedin: user.user_inkedin,
-        location: user.location,
-        userName:
-          user.firstname +
-          "_" +
-          Math.floor(Math.random() * Math.pow(10, 4)).toString(),
-        userStatus: "active",
-      });
-      if (userData._id) {
-        if (user.userType === "Investor") {
-          let existingCompany = await InvestorModel.findOne({
-            founderId: userData._id,
-          });
-          let baseOneLink = user.companyName.split(" ").join("").toLowerCase();
-          const uniqueOneLink = await generateUniqueOneLink(
-            baseOneLink,
-            InvestorModel
-          );
+		const sheetName = workbook.SheetNames[0];
+		const sheet = workbook.Sheets[sheetName];
+		const jsonData = xlsx.utils.sheet_to_json(sheet);
+		const addUser = async (user) => {
+			const userData = await UserModel.create({
+				firstName: user.firstname,
+				lastName: user.lastName,
+				email: user.email,
+				phoneNumber: user.mobileNumber,
+				bio: user.bio,
+				gender: user.gender === "M" ? "Male" : "Female",
+				isInvestor: user.userType === "Investor" ? true : false,
+				linkedin: user.user_inkedin,
+				location: user.location,
+				userName:
+					user.firstname +
+					"_" +
+					Math.floor(Math.random() * Math.pow(10, 4)).toString(),
+				userStatus: "active",
+			});
+			if (userData._id) {
+				if (user.userType === "Investor") {
+					let existingCompany = await InvestorModel.findOne({
+						founderId: userData._id,
+					});
+					let baseOneLink = user.companyName.split(" ").join("").toLowerCase();
+					const uniqueOneLink = await generateUniqueOneLink(
+						baseOneLink,
+						InvestorModel
+					);
 
-          if (existingCompany) {
-            existingCompany.set({
-              companyName: user.companyName,
-              industry: user.industry,
-              description: user.pcomany_bio,
-              oneLink: uniqueOneLink,
-            });
-            await existingCompany.save();
-          } else {
-            const newInvestor = await InvestorModel.create({
-              companyName: user.companyName,
-              industry: user.industry,
-              description: user.pcomany_bio,
-              oneLink: uniqueOneLink,
-              founderId: userData._id,
-              linkedin: user.company_inkedin,
-              logo: user.logo,
-            });
-            const { founderId } = newInvestor;
-            await UserModel.findOneAndUpdate(
-              { _id: founderId },
-              {
-                investor: newInvestor._id,
-                location: user.location,
-              }
-            );
-          }
-        } else {
-          let existingCompany = await StartUpModel.findOne({
-            founderId: userData._id,
-          });
-          let baseOneLink = user.companyName.split(" ").join("").toLowerCase();
-          const uniqueOneLink = await generateUniqueOneLink(
-            baseOneLink,
-            StartUpModel
-          );
+					if (existingCompany) {
+						existingCompany.set({
+							companyName: user.companyName,
+							industry: user.industry,
+							description: user.pcomany_bio,
+							oneLink: uniqueOneLink,
+						});
+						await existingCompany.save();
+					} else {
+						const newInvestor = await InvestorModel.create({
+							companyName: user.companyName,
+							industry: user.industry,
+							description: user.pcomany_bio,
+							oneLink: uniqueOneLink,
+							founderId: userData._id,
+							linkedin: user.company_inkedin,
+							logo: user.logo,
+						});
+						const { founderId } = newInvestor;
+						await UserModel.findOneAndUpdate(
+							{ _id: founderId },
+							{
+								investor: newInvestor._id,
+								location: user.location,
+							}
+						);
+					}
+				} else {
+					let existingCompany = await StartUpModel.findOne({
+						founderId: userData._id,
+					});
+					let baseOneLink = user.companyName.split(" ").join("").toLowerCase();
+					const uniqueOneLink = await generateUniqueOneLink(
+						baseOneLink,
+						StartUpModel
+					);
 
-          if (existingCompany) {
-            existingCompany.set({
-              location: user.location,
-              company: user.companyName,
-              industry: user.industry,
-              designation: user.designation,
-              oneLink: uniqueOneLink,
-              description: user.pcomany_bio,
-            });
-            await existingCompany.save();
-          } else {
-            const newStartUp = new StartUpModel({
-              companyName: user.companyName,
-              industry: user.industry,
-              description: user.pcomany_bio,
-              founderId: userData._id,
-              oneLink: uniqueOneLink,
-              linkedin: user.company_inkedin,
-              logo: user.logo,
-            });
+					if (existingCompany) {
+						existingCompany.set({
+							location: user.location,
+							company: user.companyName,
+							industry: user.industry,
+							designation: user.designation,
+							oneLink: uniqueOneLink,
+							description: user.pcomany_bio,
+						});
+						await existingCompany.save();
+					} else {
+						const newStartUp = new StartUpModel({
+							companyName: user.companyName,
+							industry: user.industry,
+							description: user.pcomany_bio,
+							founderId: userData._id,
+							oneLink: uniqueOneLink,
+							linkedin: user.company_inkedin,
+							logo: user.logo,
+						});
 
-            await newStartUp.save();
-            const { founderId } = newStartUp;
-            await UserModel.findOneAndUpdate(
-              { _id: founderId },
-              {
-                startUp: newStartUp._id,
-              }
-            );
-          }
-        }
-      }
-    };
-    jsonData.forEach((item) => {
-      addUser(item);
-    });
+						await newStartUp.save();
+						const { founderId } = newStartUp;
+						await UserModel.findOneAndUpdate(
+							{ _id: founderId },
+							{
+								startUp: newStartUp._id,
+							}
+						);
+					}
+				}
+			}
+		};
+		jsonData.forEach((item) => {
+			addUser(item);
+		});
 
-    return res.status(200).send(jsonData);
-  } catch (err) {
-    return res.status(200).send(err.message);
-  }
+		return res.status(200).send(jsonData);
+	} catch (err) {
+		return res.status(200).send(err.message);
+	}
 };
 
 export const getUsersByUserNameController = async (req, res) => {
-  try {
-    const { username } = req.body;
+	try {
+		const { username } = req.body;
 
-    if (!username) {
-      console.log("Username not provided in the request body.");
-      return res.status(200).send({ message: "User not found" });
-    }
+		if (!username) {
+			console.log("Username not provided in the request body.");
+			return res.status(200).send({ message: "User not found" });
+		}
 
-    console.log(`Received request to get user by username: ${username}`);
+		console.log(`Received request to get user by username: ${username}`);
 
-    const getUser = await getUserByUserName(username);
+		const getUser = await getUserByUserName(username);
 
-    if (getUser.status === 404) {
-      return res.status(404).send({status: false, message: "User not found", data:{} });
-    }
+		if (getUser.status === 404) {
+			return res
+				.status(404)
+				.send({ status: false, message: "User not found", data: {} });
+		}
 
-    return res.status(200).send({status: true,message: "User details fetched", data:getUser.message});
-  } catch (error) {
-    console.error("Error in getUsersByUserNameController:", error);
-    return res.status(500).send({ status: false, message: error, data:{} });
-  }
+		return res
+			.status(200)
+			.send({
+				status: true,
+				message: "User details fetched",
+				data: getUser.message,
+			});
+	} catch (error) {
+		console.error("Error in getUsersByUserNameController:", error);
+		return res.status(500).send({ status: false, message: error, data: {} });
+	}
 };
 
-
 export const addInvestor = async (req, res) => {
-  try {
-    const file = req.file;
+	try {
+		const file = req.file;
 
-    if (!file) {
-      return res.status(400).send("No file uploaded.");
-    }
-    const generateUniqueOneLink = async (baseLink, model) => {
-      let uniqueLink = baseLink;
-      let count = 1;
-      while (await model.countDocuments({ oneLink: uniqueLink })) {
-        uniqueLink = baseLink + count++;
-      }
-      return uniqueLink;
-    };
-    // Read the file from disk using xlsx.readFile
-    const workbook = xlsx.readFile(file.path);
+		if (!file) {
+			return res.status(400).send("No file uploaded.");
+		}
+		const generateUniqueOneLink = async (baseLink, model) => {
+			let uniqueLink = baseLink;
+			let count = 1;
+			while (await model.countDocuments({ oneLink: uniqueLink })) {
+				uniqueLink = baseLink + count++;
+			}
+			return uniqueLink;
+		};
+		// Read the file from disk using xlsx.readFile
+		const workbook = xlsx.readFile(file.path);
 
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const jsonData = xlsx.utils.sheet_to_json(sheet);
-    const addUser = async (user) => {
-      const userData = await UserModel.create({
-        firstName: user.firstname,
-        lastName: user.lastname,
-        email: user.email,
-        //phoneNumber: user.mobileNumber,
-        bio: user.notes,
-        //gender: user.gender === "M"? "Male":"Female",
-        isInvestor: true,
-        linkedin: user.urls,
-        //location:user.location,
-        userName:
-          user.firstname +
-          "_" +
-          Math.floor(Math.random() * Math.pow(10, 4)).toString(),
-        userStatus: "active",
-        designation: user.jobTitle,
-      });
-      if (userData._id && user.companies) {
-        let existingCompany = await InvestorModel.findOne({
-          founderId: userData._id,
-        });
-        let baseOneLink = user.companies.split(" ").join("").toLowerCase();
-        const uniqueOneLink = await generateUniqueOneLink(
-          baseOneLink,
-          InvestorModel
-        );
+		const sheetName = workbook.SheetNames[0];
+		const sheet = workbook.Sheets[sheetName];
+		const jsonData = xlsx.utils.sheet_to_json(sheet);
+		const addUser = async (user) => {
+			const userData = await UserModel.create({
+				firstName: user.firstname,
+				lastName: user.lastname,
+				email: user.email,
+				//phoneNumber: user.mobileNumber,
+				bio: user.notes,
+				//gender: user.gender === "M"? "Male":"Female",
+				isInvestor: true,
+				linkedin: user.urls,
+				//location:user.location,
+				userName:
+					user.firstname +
+					"_" +
+					Math.floor(Math.random() * Math.pow(10, 4)).toString(),
+				userStatus: "active",
+				designation: user.jobTitle,
+			});
+			if (userData._id && user.companies) {
+				let existingCompany = await InvestorModel.findOne({
+					founderId: userData._id,
+				});
+				let baseOneLink = user.companies.split(" ").join("").toLowerCase();
+				const uniqueOneLink = await generateUniqueOneLink(
+					baseOneLink,
+					InvestorModel
+				);
 
-        if (existingCompany) {
-          existingCompany.set({
-            companyName: user.companies,
-            // industry:user.industry,
-            // description: user.pcomany_bio,
-            oneLink: uniqueOneLink,
-          });
-          await existingCompany.save();
-        } else {
-          const newInvestor = await InvestorModel.create({
-            companyName: user.companies,
-            //industry:user.industry,
-            //description: user.pcomany_bio,
-            oneLink: uniqueOneLink,
-            founderId: userData._id,
-            //linkedin:user.company_inkedin,
-            //logo:user.logo,
-          });
-          const { founderId } = newInvestor;
-          await UserModel.findOneAndUpdate(
-            { _id: founderId },
-            {
-              investor: newInvestor._id,
-              //location:user.location,
-            }
-          );
-        }
-      }
-    };
-    jsonData.forEach((item) => {
-      addUser(item);
-    });
+				if (existingCompany) {
+					existingCompany.set({
+						companyName: user.companies,
+						// industry:user.industry,
+						// description: user.pcomany_bio,
+						oneLink: uniqueOneLink,
+					});
+					await existingCompany.save();
+				} else {
+					const newInvestor = await InvestorModel.create({
+						companyName: user.companies,
+						//industry:user.industry,
+						//description: user.pcomany_bio,
+						oneLink: uniqueOneLink,
+						founderId: userData._id,
+						//linkedin:user.company_inkedin,
+						//logo:user.logo,
+					});
+					const { founderId } = newInvestor;
+					await UserModel.findOneAndUpdate(
+						{ _id: founderId },
+						{
+							investor: newInvestor._id,
+							//location:user.location,
+						}
+					);
+				}
+			}
+		};
+		jsonData.forEach((item) => {
+			addUser(item);
+		});
 
-    return res.status(200).send(jsonData);
-  } catch (err) {
-    return res.status(200).send(err.message);
-  }
+		return res.status(200).send(jsonData);
+	} catch (err) {
+		return res.status(200).send(err.message);
+	}
 };
 
 export const addStartUp_data = async (req, res) => {
-  try {
-    const file = req.file;
+	try {
+		const file = req.file;
 
-    if (!file) {
-      return res.status(400).send("No file uploaded.");
-    }
-    const generateUniqueOneLink = async (baseLink, model) => {
-      let uniqueLink = baseLink;
-      let count = 1;
-      while (await model.countDocuments({ oneLink: uniqueLink })) {
-        uniqueLink = baseLink + count++;
-      }
-      return uniqueLink;
-    };
-    // Read the file from disk using xlsx.readFile
-    const workbook = xlsx.readFile(file.path);
+		if (!file) {
+			return res.status(400).send("No file uploaded.");
+		}
+		const generateUniqueOneLink = async (baseLink, model) => {
+			let uniqueLink = baseLink;
+			let count = 1;
+			while (await model.countDocuments({ oneLink: uniqueLink })) {
+				uniqueLink = baseLink + count++;
+			}
+			return uniqueLink;
+		};
+		// Read the file from disk using xlsx.readFile
+		const workbook = xlsx.readFile(file.path);
 
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const jsonData = xlsx.utils.sheet_to_json(sheet);
-    const addUser = async (user) => {
-      const userData = await UserModel.create({
-        firstName: user.firstname,
-        lastName: user.lastName,
-        email: user.email,
-        //phoneNumber: user.mobileNumber,
-        //bio: user.notes,
-        //gender: user.gender === "M"? "Male":"Female",
-        isInvestor: true,
-        linkedin: user.luser_inkedin,
-        //location:user.location,
-        userName:
-          user.firstname +
-          "_" +
-          Math.floor(Math.random() * Math.pow(10, 4)).toString(),
-        userStatus: "active",
-        designation: user.bio,
-      });
-      if (userData._id && user.pcompany_bio) {
-        let baseOneLink = user.pcompany_bio.split(" ").join("").toLowerCase();
-        const uniqueOneLink = await generateUniqueOneLink(
-          baseOneLink,
-          StartUpModel
-        );
-        const isExist = await StartUpModel.findOne({ oneLink: uniqueOneLink });
-        console.log(isExist?._id);
-        if (isExist) {
-          await UserModel.findOneAndUpdate(
-            { _id: userData._id },
-            {
-              startUp: isExist._id,
-            }
-          );
-        } else {
-          const newStartUp = new StartUpModel({
-            company: user.pcompany_bio,
-            //industry: user.industry,
-            //description: user.pcomany_bio,
-            founderId: userData._id,
-            oneLink: uniqueOneLink,
-            //linkedin: user.company_inkedin,
-            //logo: user.logo,
-          });
+		const sheetName = workbook.SheetNames[0];
+		const sheet = workbook.Sheets[sheetName];
+		const jsonData = xlsx.utils.sheet_to_json(sheet);
+		const addUser = async (user) => {
+			const userData = await UserModel.create({
+				firstName: user.firstname,
+				lastName: user.lastName,
+				email: user.email,
+				//phoneNumber: user.mobileNumber,
+				//bio: user.notes,
+				//gender: user.gender === "M"? "Male":"Female",
+				isInvestor: true,
+				linkedin: user.luser_inkedin,
+				//location:user.location,
+				userName:
+					user.firstname +
+					"_" +
+					Math.floor(Math.random() * Math.pow(10, 4)).toString(),
+				userStatus: "active",
+				designation: user.bio,
+			});
+			if (userData._id && user.pcompany_bio) {
+				let baseOneLink = user.pcompany_bio.split(" ").join("").toLowerCase();
+				const uniqueOneLink = await generateUniqueOneLink(
+					baseOneLink,
+					StartUpModel
+				);
+				const isExist = await StartUpModel.findOne({ oneLink: uniqueOneLink });
+				console.log(isExist?._id);
+				if (isExist) {
+					await UserModel.findOneAndUpdate(
+						{ _id: userData._id },
+						{
+							startUp: isExist._id,
+						}
+					);
+				} else {
+					const newStartUp = new StartUpModel({
+						company: user.pcompany_bio,
+						//industry: user.industry,
+						//description: user.pcomany_bio,
+						founderId: userData._id,
+						oneLink: uniqueOneLink,
+						//linkedin: user.company_inkedin,
+						//logo: user.logo,
+					});
 
-          await newStartUp.save();
-          const { founderId } = newStartUp;
-          await UserModel.findOneAndUpdate(
-            { _id: founderId },
-            {
-              startUp: newStartUp._id,
-            }
-          );
-        }
-      }
-    };
-    jsonData.forEach((item) => {
-      addUser(item);
-    });
-    return res.status(200).send(jsonData);
-  } catch (err) {
-    return res.status(200).send(err.message);
-  }
+					await newStartUp.save();
+					const { founderId } = newStartUp;
+					await UserModel.findOneAndUpdate(
+						{ _id: founderId },
+						{
+							startUp: newStartUp._id,
+						}
+					);
+				}
+			}
+		};
+		jsonData.forEach((item) => {
+			addUser(item);
+		});
+		return res.status(200).send(jsonData);
+	} catch (err) {
+		return res.status(200).send(err.message);
+	}
 };
 export const getUsersController = async (req, res, next) => {
-  try {
-    const getUser = await getUsersService();
-    return res.status(200).json(getUser);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to fetch data" });
-  }
+	try {
+		const getUser = await getUsersService();
+		return res.status(200).json(getUser);
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ error: "Failed to fetch data" });
+	}
 };
 export const sendOTP = async (req, res) => {
-  try {
-    const response = await axios.post(
-      "https://auth.otpless.app/auth/otp/v1/send",
-      {
-        phoneNumber: req.body.phoneNumber,
-        otpLength: 6,
-        channel: "SMS",
-        expiry: 600,
-      },
-      {
-        headers: {
-          clientId: process.env.CLIENT_ID,
-          clientSecret: process.env.CLIENT_SECRET,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return res.send({
-      status:true,
-      data: {orderId: response.data.orderId},
-      message: "OTP Send successfully",
-    });
-  } catch (err) {
-    return res.json({status:false, error: "Failed to fetch data", data:{}});
-  }
+	try {
+		const response = await axios.post(
+			"https://auth.otpless.app/auth/otp/v1/send",
+			{
+				phoneNumber: req.body.phoneNumber,
+				otpLength: 6,
+				channel: "SMS",
+				expiry: 600,
+			},
+			{
+				headers: {
+					clientId: process.env.CLIENT_ID,
+					clientSecret: process.env.CLIENT_SECRET,
+					"Content-Type": "application/json",
+				},
+			}
+		);
+		return res.send({
+			status: true,
+			data: { orderId: response.data.orderId },
+			message: "OTP Send successfully",
+		});
+	} catch (err) {
+		return res.json({ status: false, error: "Failed to fetch data", data: {} });
+	}
 };
-export const resendOtp = async(req,res)=>{
-  try {
-    const response = await axios.post(
-      "https://auth.otpless.app/auth/otp/v1/resend",
-      {
-        orderId: req.body.orderId,
-      },
-      {
-        headers: {
-          clientId: process.env.CLIENT_ID,
-          clientSecret: process.env.CLIENT_SECRET,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return res.send({
-      status:true,
-      data: {orderId: response.data.orderId},
-      message: "OTP Re-sent successfully",
-    });
-  } catch (err) {
-    return res.json({status:false, error: err, data:{}});
-  }
+export const resendOtp = async (req, res) => {
+	try {
+		const response = await axios.post(
+			"https://auth.otpless.app/auth/otp/v1/resend",
+			{
+				orderId: req.body.orderId,
+			},
+			{
+				headers: {
+					clientId: process.env.CLIENT_ID,
+					clientSecret: process.env.CLIENT_SECRET,
+					"Content-Type": "application/json",
+				},
+			}
+		);
+		return res.send({
+			status: true,
+			data: { orderId: response.data.orderId },
+			message: "OTP Re-sent successfully",
+		});
+	} catch (err) {
+		return res.json({ status: false, error: err, data: {} });
+	}
 };
 
 export const verifyOtp = async (req, res) => {
-  try {
-    const response = await axios.post(
-      "https://auth.otpless.app/auth/otp/v1/verify",
-      {
-        orderId: req.body.orderId,
-        otp: req.body.otp,
-        phoneNumber: req.body.phoneNumber,
-      },
-      {
-        headers: {
-          clientId: process.env.CLIENT_ID,
-          clientSecret: process.env.CLIENT_SECRET,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+	try {
+		const response = await axios.post(
+			"https://auth.otpless.app/auth/otp/v1/verify",
+			{
+				orderId: req.body.orderId,
+				otp: req.body.otp,
+				phoneNumber: req.body.phoneNumber,
+			},
+			{
+				headers: {
+					clientId: process.env.CLIENT_ID,
+					clientSecret: process.env.CLIENT_SECRET,
+					"Content-Type": "application/json",
+				},
+			}
+		);
 
-const phoneNumber = req.body.phoneNumber
+		const phoneNumber = req.body.phoneNumber;
 
+		if (response.data.isOTPVerified) {
+			const user = await UserModel.findOne({ phoneNumber: `+${phoneNumber}` });
 
-   if (response.data.isOTPVerified) {
-  const user = await UserModel.findOne({ phoneNumber: `+${phoneNumber}` });
+			const token = jwt.sign(
+				{ userId: user._id, phoneNumber: user.phoneNumber },
+				secretKey
+			);
 
-    const token = jwt.sign(
-      { userId: user._id, phoneNumber: user.phoneNumber },
-      secretKey
-    );
-
-      return res.send({
-        status:true,
-        data:{
-        user:user,
-        token:token
-      },
-        message: "OTP verified",
-      });
- }
-    return res.send({
-      status:false,
-      data: response.data,
-      message: "Otp not verified",
-    });
-  } catch (err) {
-    return res.json({ status: false, error: err, data:{} });
-  }
+			return res.send({
+				status: true,
+				data: {
+					user: user,
+					token: token,
+				},
+				message: "OTP verified",
+			});
+		}
+		return res.send({
+			status: false,
+			data: response.data,
+			message: "Otp not verified",
+		});
+	} catch (err) {
+		return res.json({ status: false, error: err, data: {} });
+	}
 };
 
-export const blockUserController = async (req,res)=>{
-  try{
+export const blockUserController = async (req, res) => {
+	try {
+		const { userId, blockedUserId } = req.body;
+		const response = await blockUser(userId, blockedUserId);
+		return res.status(response.status).send(response);
+	} catch (error) {
+		console.error(
+			"Error during blocking users",
+			error.response ? error.response.data : error.message
+		);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
 
-    const {userId, blockedUserId} = req.body;
-    const response = await blockUser(userId,blockedUserId);
-    return res.status(response.status).send(response);
-
-
-  }catch(error){
-    console.error("Error during blocking users", error.response? error.response.data : error.message);
-    res.status(500).json({error:"Internal Server Error"})
-  }
-
-}
-
-
-export const unblockUserController = async (req,res)=>{
-  try{
-
-    const {userId, unblockUserId} = req.body;
-    const response = await unblockUser(userId, unblockUserId);
-    return res.status(response.status).send(response);
-
-
-  }catch(error){
-    console.error("Error during unblocking users", error.response? error.response.data : error.message);
-    res.status(500).json({error:"Internal Server Error"})
-  }
-
-}
+export const unblockUserController = async (req, res) => {
+	try {
+		const { userId, unblockUserId } = req.body;
+		const response = await unblockUser(userId, unblockUserId);
+		return res.status(response.status).send(response);
+	} catch (error) {
+		console.error(
+			"Error during unblocking users",
+			error.response ? error.response.data : error.message
+		);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+};
 
 // get user by id from body
 export const getUserByIdBodyController = async (req, res) => {
-  try{
-
-    const {userId} = req.body;
-    const response = await getUserByIdBody(userId);
-    return res.status(response.status).send(response);
-
-
-  }catch(error){
-    console.error("Error", error.response? error.response.data : error.message);
-    res.status(500).json({error:"Internal Server Error"})
-  }
+	try {
+		const { userId } = req.body;
+		const response = await getUserByIdBody(userId);
+		return res.status(response.status).send(response);
+	} catch (error) {
+		console.error(
+			"Error",
+			error.response ? error.response.data : error.message
+		);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
 };
 
 export const registerUserController = async (req, res, next) => {
-  try {
-    const {
-      firstName,
-      lastName,
-      email,
-      password,
-      phoneNumber,
-      designation,
-      gender,
-      isInvestor,
-      company,
-      industry,
-      location,
-      foundingAsk,
-      previousFounding,
-      fundedTillDate,
-      portfolio,
-      chequeSize,
-      linkedin,
-    } = req.body;
+	try {
+		const {
+			firstName,
+			lastName,
+			email,
+			password,
+			phoneNumber,
+			designation,
+			gender,
+			isInvestor,
+			company,
+			industry,
+			location,
+			foundingAsk,
+			previousFounding,
+			fundedTillDate,
+			portfolio,
+			chequeSize,
+			linkedin,
+		} = req.body;
 
-    const newUser = await registerUserService({
-      firstName,
-      lastName,
-      email,
-      password,
-      phoneNumber,
-      isInvestor,
-      gender,
-      linkedin,
-    });
+		const newUser = await registerUserService({
+			firstName,
+			lastName,
+			email,
+			password,
+			phoneNumber,
+			isInvestor,
+			gender,
+			linkedin,
+		});
 
-    const generateUniqueOneLink = async (baseLink, model) => {
-      let uniqueLink = baseLink;
-      let count = 1;
-      while (await model.countDocuments({ oneLink: uniqueLink })) {
-        uniqueLink = baseLink + count++;
-      }
-      return uniqueLink;
-    };
+		const generateUniqueOneLink = async (baseLink, model) => {
+			let uniqueLink = baseLink;
+			let count = 1;
+			while (await model.countDocuments({ oneLink: uniqueLink })) {
+				uniqueLink = baseLink + count++;
+			}
+			return uniqueLink;
+		};
 
-    if (isInvestor) {
-      let existingCompany = await InvestorModel.findOne({
-        founderId: newUser._id,
-      });
-      let baseOneLink = company.split(" ").join("").toLowerCase();
-      const uniqueOneLink = await generateUniqueOneLink(
-        baseOneLink,
-        InvestorModel
-      );
+		if (isInvestor) {
+			let existingCompany = await InvestorModel.findOne({
+				founderId: newUser._id,
+			});
+			let baseOneLink = company.split(" ").join("").toLowerCase();
+			const uniqueOneLink = await generateUniqueOneLink(
+				baseOneLink,
+				InvestorModel
+			);
 
-      if (existingCompany) {
-        existingCompany.set({
-          companyName: company,
-          industry,
-          description: portfolio,
-          oneLink: uniqueOneLink,
-        });
-        await existingCompany.save();
-        return res.json({status:true, message: "Investor Updated", data: existingCompany });
-      }
-      const newInvestor = await InvestorModel.create({
-        companyName: company,
-        industry,
-        description: portfolio,
-        oneLink: uniqueOneLink,
-        founderId: newUser._id,
-        linkedin,
-      });
-      //await newInvestor.save();
-      const { founderId } = newInvestor;
-      const user = await UserModel.findOneAndUpdate(
-        { _id: founderId },
-        {
-          investor: newInvestor._id,
-          location,
-        }
-      );
-      //  console.log("update")
-      // const emailMessage = `
-      //   A new user has requested for an account:
-        
-      //   Investor Details:
-      //   User ID: ${newUser._id}
-      //   Name: ${newUser.firstName} ${newUser.lastName}
-      //   Email: ${newUser.email}
-      //   Mobile: ${phoneNumber}
-      //   Company Name: ${newInvestor.companyName}
-      //   Industry: ${newInvestor.industry}
-      //   Portfolio: ${newInvestor.portfolio}
-      // `;
-      // const subject = "New Account Request";
-      // const adminMail = "investments.capitalhub@gmail.com";
-      // //"learn.capitalhub@gmail.com";
-      // const response = await sendMail(
-      //   newUser.firstName,
-      //   adminMail,
-      //   newUser.email,
-      //   subject,
-      //   emailMessage
-      // );
-      // if (response.status === 200) {
-        return res
-          .status(200)
-          .json({status:true, message: "Investor Added", data: newUser });
-      // } else {
-      //   return res.status(500).json({ message: "Error while sending mail" });
-      // }
-      //return res.status(201).json({ message: "User added successfully" });
-    } else {
-      let existingCompany = await StartUpModel.findOne({
-        founderId: newUser._id,
-      });
-      let baseOneLink = company.split(" ").join("").toLowerCase();
-      const uniqueOneLink = await generateUniqueOneLink(
-        baseOneLink,
-        StartUpModel
-      );
+			if (existingCompany) {
+				existingCompany.set({
+					companyName: company,
+					industry,
+					description: portfolio,
+					oneLink: uniqueOneLink,
+				});
+				await existingCompany.save();
+				return res.json({
+					status: true,
+					message: "Investor Updated",
+					data: existingCompany,
+				});
+			}
+			const newInvestor = await InvestorModel.create({
+				companyName: company,
+				industry,
+				description: portfolio,
+				oneLink: uniqueOneLink,
+				founderId: newUser._id,
+				linkedin,
+			});
+			//await newInvestor.save();
+			const { founderId } = newInvestor;
+			const user = await UserModel.findOneAndUpdate(
+				{ _id: founderId },
+				{
+					investor: newInvestor._id,
+					location,
+				}
+			);
+			//  console.log("update")
+			// const emailMessage = `
+			//   A new user has requested for an account:
 
-      if (existingCompany) {
-        existingCompany.set({
-          location,
-          foundingAsk,
-          company,
-          industry,
-          designation,
-          oneLink: uniqueOneLink,
-          founderId: newUser._id,
-        });
-        await existingCompany.save();
-        return res
-          .status(200)
-          .json({ message: "Startup Updated", data: existingCompany });
-      }
+			//   Investor Details:
+			//   User ID: ${newUser._id}
+			//   Name: ${newUser.firstName} ${newUser.lastName}
+			//   Email: ${newUser.email}
+			//   Mobile: ${phoneNumber}
+			//   Company Name: ${newInvestor.companyName}
+			//   Industry: ${newInvestor.industry}
+			//   Portfolio: ${newInvestor.portfolio}
+			// `;
+			// const subject = "New Account Request";
+			// const adminMail = "investments.capitalhub@gmail.com";
+			// //"learn.capitalhub@gmail.com";
+			// const response = await sendMail(
+			//   newUser.firstName,
+			//   adminMail,
+			//   newUser.email,
+			//   subject,
+			//   emailMessage
+			// );
+			// if (response.status === 200) {
+			return res
+				.status(200)
+				.json({ status: true, message: "Investor Added", data: newUser });
+			// } else {
+			//   return res.status(500).json({ message: "Error while sending mail" });
+			// }
+			//return res.status(201).json({ message: "User added successfully" });
+		} else {
+			let existingCompany = await StartUpModel.findOne({
+				founderId: newUser._id,
+			});
+			let baseOneLink = company.split(" ").join("").toLowerCase();
+			const uniqueOneLink = await generateUniqueOneLink(
+				baseOneLink,
+				StartUpModel
+			);
 
-      const newStartUp = new StartUpModel({
-        ...req.body,
-        oneLink: uniqueOneLink,
-      });
+			if (existingCompany) {
+				existingCompany.set({
+					location,
+					foundingAsk,
+					company,
+					industry,
+					designation,
+					oneLink: uniqueOneLink,
+					founderId: newUser._id,
+				});
+				await existingCompany.save();
+				return res
+					.status(200)
+					.json({ message: "Startup Updated", data: existingCompany });
+			}
 
-      await newStartUp.save();
-      const { founderId } = newStartUp;
-      await UserModel.findOneAndUpdate(
-        { _id: founderId },
-        {
-          startUp: newStartUp._id,
-        }
-      );
-      const token = jwt.sign(
-        { userId: newUser._id, phoneNumber: newUser.phoneNumber },
-        secretKey
-      );
-      return res.json({ status: true, message: "User added successfully", data: newUser, token });
-    }
-  } catch (error) {
-    res.json({
-      status:false,
-      error:error.message,
-      data:{}
-    });
-  }
+			const newStartUp = new StartUpModel({
+				...req.body,
+				oneLink: uniqueOneLink,
+			});
+
+			await newStartUp.save();
+			const { founderId } = newStartUp;
+			await UserModel.findOneAndUpdate(
+				{ _id: founderId },
+				{
+					startUp: newStartUp._id,
+				}
+			);
+			const token = jwt.sign(
+				{ userId: newUser._id, phoneNumber: newUser.phoneNumber },
+				secretKey
+			);
+			return res.json({
+				status: true,
+				message: "User added successfully",
+				data: newUser,
+				token,
+			});
+		}
+	} catch (error) {
+		res.json({
+			status: false,
+			error: error.message,
+			data: {},
+		});
+	}
 };
 
 export const handelLinkedin = async (req, res) => {
-  try {
-    const response = await axios.post(
-      "https://www.linkedin.com/oauth/v2/accessToken",
-      null,
-      {
-        params: {
-          grant_type: "authorization_code",
-          code: req.body.code,
-          redirect_uri: "http://localhost:3000/linkedin",
-          client_id: process.env.LINKEDIN_CLIENT_ID, // Set these in your environment
-          client_secret: process.env.LINKEDIN_CLIENT_SECRET,
-        },
-      }
-    );
-    return res.status(200).json({ access_token: response.data.access_token });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ error: error.response ? error.response.data : "Server error" });
-  }
+	try {
+		const response = await axios.post(
+			"https://www.linkedin.com/oauth/v2/accessToken",
+			null,
+			{
+				params: {
+					grant_type: "authorization_code",
+					code: req.body.code,
+					redirect_uri: "http://localhost:3000/linkedin",
+					client_id: process.env.LINKEDIN_CLIENT_ID, // Set these in your environment
+					client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+				},
+			}
+		);
+		return res.status(200).json({ access_token: response.data.access_token });
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ error: error.response ? error.response.data : "Server error" });
+	}
 };
 
 export const getLinkedInProfile = async (req, res) => {
-  try {
-    const { accessToken } = req.body;
-    console.log(accessToken);
-    const response = await axios.get("https://api.linkedin.com/v2/userinfo", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+	try {
+		const { accessToken } = req.body;
+		console.log(accessToken);
+		const response = await axios.get("https://api.linkedin.com/v2/userinfo", {
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+			},
+		});
 
-    const api_url = "https://api.linkedin.com/v2/";
+		const api_url = "https://api.linkedin.com/v2/";
 
-    const data = axios.get(
-      api_url +
-        "me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))",
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-    const ress = json.loads(data.text);
-    console.log(ress);
-    return res.status(200).json(response.data);
-  } catch (error) {
-    console.log(error.message);
-    res
-      .status(500)
-      .json({ error: error.response ? error.response.data : "Server error" });
-  }
+		const data = axios.get(
+			api_url +
+				"me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))",
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}
+		);
+		const ress = json.loads(data.text);
+		console.log(ress);
+		return res.status(200).json(response.data);
+	} catch (error) {
+		console.log(error.message);
+		res
+			.status(500)
+			.json({ error: error.response ? error.response.data : "Server error" });
+	}
 };
 export const loginUserController = async (req, res, next) => {
-  try {
-    const { phoneNumber, password } = req.body;
-    const user = await loginUserService({
-      phoneNumber,
-      password,
-    });
+	try {
+		const { phoneNumber, password } = req.body;
+		const user = await loginUserService({
+			phoneNumber,
+			password,
+		});
 
-    user.password = undefined;
+		user.password = undefined;
 
-    const token = jwt.sign(
-      { userId: user._id, phoneNumber: user.phoneNumber },
-      secretKey
-    );
+		const token = jwt.sign(
+			{ userId: user._id, phoneNumber: user.phoneNumber },
+			secretKey
+		);
 
-    return res
-      .cookie("token", token)
-      .status(200)
-      .json({status:true, message: "Login successful", data: {user, token} });
-  } catch (error) {
-    return res
-      .status(401)
-      .json({ operational: true, status: false, message: error.message, data:{} });
-  }
+		return res
+			.cookie("token", token)
+			.status(200)
+			.json({
+				status: true,
+				message: "Login successful",
+				data: { user, token },
+			});
+	} catch (error) {
+		return res
+			.status(401)
+			.json({
+				operational: true,
+				status: false,
+				message: error.message,
+				data: {},
+			});
+	}
 };
 
 // get user by id
 export const getUserByIdController = async (req, res) => {
-  try {
-    const response = await getUserById(req.params.id);
-    res.send({status: true, message: "User details fetched", data:response});
-  } catch (error) {
-    console.error(error);
-    res.send({
-      status: false,
-      message: "An error occurred while creating the company.",
-    });
-  }
+	try {
+		const response = await getUserById(req.params.id);
+		res.send({ status: true, message: "User details fetched", data: response });
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: "An error occurred while creating the company.",
+		});
+	}
 };
 
 // Update User
 export const updateUser = async (req, res) => {
-  try {
-    const { userId, body: newData } = req;
-    const { status, message, data } = await updateUserData({
-      userId,
-      newData,
-    });
-    res.json({status:true, message, data });
-  } catch (error) {
-    res.json({status:false, error, data:{} });
-  }
+	try {
+		const { userId, body: newData } = req;
+		const { status, message, data } = await updateUserData({
+			userId,
+			newData,
+		});
+		res.json({ status: true, message, data });
+	} catch (error) {
+		res.json({ status: false, error, data: {} });
+	}
 };
 
 export const updateUserByIdController = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { status, message, data } = await updateUserById(userId, req.body);
-    res.json({status, message, data });
-  } catch (error) {}
+	try {
+		const { userId } = req.params;
+		const { status, message, data } = await updateUserById(userId, req.body);
+		res.json({ status, message, data });
+	} catch (error) {}
 };
 
 export const changePasswordController = async (req, res) => {
-  try {
-    const { userId } = req;
-    const { newPassword, oldPassword } = req.body;
-    const response = await changePassword(userId, { newPassword, oldPassword });
-    res.status(response.status).send(response);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while updating password.",
-    });
-  }
+	try {
+		const { userId } = req;
+		const { newPassword, oldPassword } = req.body;
+		const response = await changePassword(userId, { newPassword, oldPassword });
+		res.status(response.status).send(response);
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while updating password.",
+		});
+	}
 };
 
 export const requestPasswordResetController = async (req, res) => {
-  try {
-    console.log(req.body)
-    const existingUser = await UserModel.findOne({
-      $or: [{ email: req.body.usernameOrEmail }, { userName: req.body.usernameOrEmail }],
-    });
-    if(!existingUser){
-      return res.status(400).send({message:"User dose not exist"})
-    }
-    //const response = await requestPasswordReset(email);
-    const salt = await bcrypt.genSalt(10);
-    const password = await bcrypt.hash(req.body.password.toString(), salt);
+	try {
+		console.log(req.body);
+		const existingUser = await UserModel.findOne({
+			$or: [
+				{ email: req.body.usernameOrEmail },
+				{ userName: req.body.usernameOrEmail },
+			],
+		});
+		if (!existingUser) {
+			return res.status(400).send({ message: "User dose not exist" });
+		}
+		//const response = await requestPasswordReset(email);
+		const salt = await bcrypt.genSalt(10);
+		const password = await bcrypt.hash(req.body.password.toString(), salt);
 
-    await UserModel.findOneAndUpdate(
-      {
-        $or: [{ email: req.body.usernameOrEmail }, { userName: req.body.usernameOrEmail }],
-      },
-      { password: password }
-    );
-    return res.status(200).send({user:existingUser,status:"200"});
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: "An error occurred while requesting a password reset" });
-  }
+		await UserModel.findOneAndUpdate(
+			{
+				$or: [
+					{ email: req.body.usernameOrEmail },
+					{ userName: req.body.usernameOrEmail },
+				],
+			},
+			{ password: password }
+		);
+		return res.status(200).send({ user: existingUser, status: "200" });
+	} catch (error) {
+		console.error(error);
+		return res
+			.status(500)
+			.json({ message: "An error occurred while requesting a password reset" });
+	}
 };
 
 export const resetPasswordController = async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-    const response = await resetPassword(token, newPassword);
-    res.status(response.status).send(response);
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: "An error occurred while resetting the password" });
-  }
+	try {
+		const { token, newPassword } = req.body;
+		const response = await resetPassword(token, newPassword);
+		res.status(response.status).send(response);
+	} catch (error) {
+		console.error(error);
+		return res
+			.status(500)
+			.json({ message: "An error occurred while resetting the password" });
+	}
 };
 
 export const searchUsersController = async (req, res) => {
-  try {
-    const { searchQuery } = req.query;
-    const response = await searchUsers(searchQuery);
-    res.status(response.status).send(response);
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: "An error occurred while resetting the password" });
-  }
+	try {
+		const { searchQuery } = req.query;
+		const response = await searchUsers(searchQuery);
+		res.status(response.status).send(response);
+	} catch (error) {
+		console.error(error);
+		return res
+			.status(500)
+			.json({ message: "An error occurred while resetting the password" });
+	}
 };
 
 // add education
 export const addEducationController = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const response = await addEducation(userId, req.body);
-    res.status(response.status).send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while adding education.",
-    });
-  }
+	try {
+		const { userId } = req.params;
+		const response = await addEducation(userId, req.body);
+		res.status(response.status).send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while adding education.",
+		});
+	}
 };
 
 //add experience
 export const addExperienceController = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const response = await addExperience(userId, req.body);
-    res.status(response.status).send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while adding experience.",
-    });
-  }
+	try {
+		const { userId } = req.params;
+		const response = await addExperience(userId, req.body);
+		res.status(response.status).send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while adding experience.",
+		});
+	}
 };
 
 //add startup to user
 export const addStartupToUserController = async (req, res) => {
-  try {
-    const { userId, startUpId } = req.body;
-    const response = await addStartupToUser(userId, startUpId);
-    res.send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.json({
-      status: false,
-      message: "An error occurred while adding startups to user.",
-    });
-  }
+	try {
+		const { userId, startUpId } = req.body;
+		const response = await addStartupToUser(userId, startUpId);
+		res.send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.json({
+			status: false,
+			message: "An error occurred while adding startups to user.",
+		});
+	}
 };
 
 export const addUserAsInvestorController = async (req, res) => {
-  try {
-    const { userId, investorId } = req.body;
-    const response = await addUserAsInvestor(userId, investorId);
-    res.status(response.status).send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while adding user as investor.",
-    });
-  }
+	try {
+		const { userId, investorId } = req.body;
+		const response = await addUserAsInvestor(userId, investorId);
+		res.status(response.status).send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while adding user as investor.",
+		});
+	}
 };
 
 export const getExploreController = async (req, res) => {
-  try {
-    const response = await getExplore(req.query);
-    res.send({status:true, ...response});
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: false,
-      message: "An error occurred while getting explore results.",
-    });
-  }
+	try {
+		const response = await getExplore(req.query);
+		res.send({ status: true, ...response });
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: false,
+			message: "An error occurred while getting explore results.",
+		});
+	}
 };
 
 export const getExploreFiltersController = async (req, res) => {
-  try {
-    const { type } = req.query;
-    const response = await getExploreFilters(type);
-    res.send({status:true, ...response});
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: false,
-      message: "An error occurred while getting explore results.",
-    });
-  }
+	try {
+		const { type } = req.query;
+		const response = await getExploreFilters(type);
+		res.send({ status: true, ...response });
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: false,
+			message: "An error occurred while getting explore results.",
+		});
+	}
 };
 
 export const validateSecretKeyController = async (req, res) => {
-  try {
-    const { oneLinkId, secretOneLinkKey } = req.body;
-    const response = await validateSecretKey({
-      oneLinkId,
-      secretOneLinkKey,
-    });
-    res.status(response.status).send(response);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while vaidating secret key.",
-    });
-  }
+	try {
+		const { oneLinkId, secretOneLinkKey } = req.body;
+		const response = await validateSecretKey({
+			oneLinkId,
+			secretOneLinkKey,
+		});
+		res.status(response.status).send(response);
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while vaidating secret key.",
+		});
+	}
 };
 
 export const createSecretKeyController = async (req, res) => {
-  try {
-    const { secretOneLinkKey } = req.body;
-    const userId = req.userId;
-    const response = await createSecretKey(userId, secretOneLinkKey);
-    res.send(response);
-  } catch (error) {
-    console.error(error);
-    res.send({
-      status: false,
-      message: "An error occurred while creating secret key.",
-    });
-  }
+	try {
+		const { secretOneLinkKey } = req.body;
+		const userId = req.userId;
+		const response = await createSecretKey(userId, secretOneLinkKey);
+		res.send(response);
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: "An error occurred while creating secret key.",
+		});
+	}
 };
 
 export const googleLoginController = async (req, res) => {
-  try {
-    const { credential } = req.body;
-    const response = await googleLogin(credential);
-    res.status(response.status).send(response);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while login.",
-    });
-  }
+	try {
+		const { credential } = req.body;
+		const response = await googleLogin(credential);
+		res.status(response.status).send(response);
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while login.",
+		});
+	}
 };
 
 export const updateEducationController = async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { educationId } = req.params;
-    const response = await updateEducation(userId, educationId, req.body);
-    res.status(response.status).send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while updating education.",
-    });
-  }
+	try {
+		const userId = req.userId;
+		const { educationId } = req.params;
+		const response = await updateEducation(userId, educationId, req.body);
+		res.status(response.status).send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while updating education.",
+		});
+	}
 };
 
 export const deleteEducationController = async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { educationId } = req.params;
-    const response = await deleteEducation(userId, educationId);
-    res.status(response.status).send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while deleting education.",
-    });
-  }
+	try {
+		const userId = req.userId;
+		const { educationId } = req.params;
+		const response = await deleteEducation(userId, educationId);
+		res.status(response.status).send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while deleting education.",
+		});
+	}
 };
 
 export const updateExperienceController = async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { experienceId } = req.params;
-    const response = await updateExperience(userId, experienceId, req.body);
-    res.status(response.status).send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while updating experience.",
-    });
-  }
+	try {
+		const userId = req.userId;
+		const { experienceId } = req.params;
+		const response = await updateExperience(userId, experienceId, req.body);
+		res.status(response.status).send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while updating experience.",
+		});
+	}
 };
 
 export const deleteExperienceController = async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { experienceId } = req.params;
-    const response = await deleteExperience(userId, experienceId);
-    res.status(response.status).send(response);
-    return response;
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      status: 500,
-      message: "An error occurred while deleting experience.",
-    });
-  }
+	try {
+		const userId = req.userId;
+		const { experienceId } = req.params;
+		const response = await deleteExperience(userId, experienceId);
+		res.status(response.status).send(response);
+		return response;
+	} catch (error) {
+		console.error(error);
+		res.status(500).send({
+			status: 500,
+			message: "An error occurred while deleting experience.",
+		});
+	}
 };
 
 export const getProfilePostsController = async (req, res) => {
-  try {
-    const { type } = req.params;
-    const response = await getProfilePosts(req.userId, type);
-    res.send({status:true, message:"Profile posts fetched successfully", data:response});
-  } catch (error) {
-    console.error(error);
-    res.send({ status: false, message: "An error occurred while getting profile posts.", data: {} });
-  }
+	try {
+		const { type } = req.params;
+		const response = await getProfilePosts(req.userId, type);
+		res.send({
+			status: true,
+			message: "Profile posts fetched successfully",
+			data: response,
+		});
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: "An error occurred while getting profile posts.",
+			data: {},
+		});
+	}
 };
 
 export const toggleUserBlockController = async (req, res) => {
-  try {
-    const userId = req.userId;
-    const {targetUserId } = req.body;
-    const response = await toggleUserBlockStatus(userId, targetUserId);
-    return res.send(response);
-  } catch (error) {
-    console.log("Error during toggling user block status", error);
-    res.json({ status: false, message: "Internal Server Error" });
-  }
+	try {
+		const userId = req.userId;
+		const { targetUserId } = req.body;
+		const response = await toggleUserBlockStatus(userId, targetUserId);
+		return res.send(response);
+	} catch (error) {
+		console.log("Error during toggling user block status", error);
+		res.json({ status: false, message: "Internal Server Error" });
+	}
 };
 
 export const getFounderProfilePageDataController = async (req, res) => {
-  try {
-    const  userId  = req.userId;
-    const founderId = req.params.founderId;
-    const response = await getFounderProfilePageData(userId, founderId);
-    res.send({status:true, message:"Founder profile page data fetched successfully", data:response});
-  } catch (error) {
-    console.error(error);
-    res.send({ status: false, message: "An error occurred while getting the founder profile page data." });
-  }
+	try {
+		const userId = req.userId;
+		const founderId = req.params.founderId;
+		const response = await getFounderProfilePageData(userId, founderId);
+		res.send({
+			status: true,
+			message: "Founder profile page data fetched successfully",
+			data: response,
+		});
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message: "An error occurred while getting the founder profile page data.",
+		});
+	}
 };
 
 export const addFounderEmailToCurrentUserController = async (req, res) => {
-  try{
-    const  userId  = req.userId;
-    const founderId = req.params.founderId;
-    const response = await addFounderEmailToCurrentUser(userId, founderId);
-    res.send(response);
-  }
-  catch(error){
-    console.error(error);
-    res.send({ status: false, message: "An error occurred while adding the founder email to the current user." });
-  }
+	try {
+		const userId = req.userId;
+		const founderId = req.params.founderId;
+		const response = await addFounderEmailToCurrentUser(userId, founderId);
+		res.send(response);
+	} catch (error) {
+		console.error(error);
+		res.send({
+			status: false,
+			message:
+				"An error occurred while adding the founder email to the current user.",
+		});
+	}
 };
